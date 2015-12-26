@@ -1222,7 +1222,44 @@ char* const REALNAME   = "REALNAME";
 方案有两个：
 第一个，谁更新了头像就要给他自己的所有好友发送通知消息，这个是融云官方给的方案，我感觉不是太好，这是简单粗暴的。比如老王有1000个好友，那么老王更新了头像，那么就要给这1000个好友发送一条通知信息，通知他的所有的好友，哎！注意了，赶紧更新我的最新信息，我已经更新信息了，那么1000个好友很多都不在线，你发了也是浪费流量，而且很多人，可能有999个人是不关心你更不更新头像的呀！老王你烦不烦，老是更新头像给我发消息。所以这个方法不是很好。
 第二个，我觉得从消息入手，你老王更新了头像，你只要给我发送任何聊天消息我就能检测到你换了头像。怎么检测，那么我们来捋一捋这个逻辑，首先是老王和我在聊天，显示的是现在的头像，突然老王去换了头像，哎，我不知道啊，如果我给老王发消息，老王不理我我，我是拿不到老王的新头像的，那么一旦老王有回复我，就是老王有发一条任意类型的消息（消息有很多类型，语音消息，图片消息，地理位置消息等），我就从消息中获得老王的信息，信息中包含头像字段，那么就可以比较了，如果头像的url改变了，那么说明老王你更新了头像，我检测到了就马上刷新好友的最新信息并放全局数组中，并更新融云的缓存，这个缓存很重要，不更新缓存不行，不更新缓存就等于白做了，更新缓存的方法是  [[RCIM sharedRCIM] refreshUserInfoCache:theLastedInfo withUserId:userInfoDic[@"sendUsersId"]];哇靠！这个方案好，让每条消息带有对方的信息，信息是个json的字符串，几乎可以忽略占用流量的大小，而且是最新的信息，不用给不聊天的好友发送通知信息了。好了，看下面代码。
-我们用kvo拿到这个附加信息的字符串，是个json格式的字符串，一定要用kvo，不然你用.是拿不到的。Xcode后台调试，可以直接看到这些字段。
+我们用KVC拿到这个附加信息的字符串，是个json格式的字符串，一定要用KVC，不然你用.是拿不到的。Xcode后台调试，可以直接看到这些字段。那么我们需要在老王将要发送还没有发送的方法中去对消息做处理，做什么处理？就是加上老王的最新的信息啊！来看代码，者断代码是聊天界面的，不要搞混淆了（重写RCConversationViewController这个VC里面的方法）
+- (RCMessageContent *)willSendMessage:(RCMessageContent *)messageCotent{
+    
+    if ([RCIMClient sharedRCIMClient].currentUserInfo.userId) {//如果登录了
+        NSDictionary *jsonDic = @{@"sendUsersId":[RCIMClient sharedRCIMClient].currentUserInfo.userId,@"sendUsersName":self.userName,@"sendUsersPhoto":[UserInfoModel currentUserinfo].photo};
+        NSError *parseError = nil;
+        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:jsonDic options:NSJSONWritingPrettyPrinted error:&parseError];
+
+        NSString *jsonString = [[NSString alloc]initWithData:jsonData encoding:NSUTF8StringEncoding];
+        
+        if ([messageCotent isKindOfClass:[RCTextMessage class]]) {
+            
+            RCTextMessage *textMessage = (RCTextMessage*)messageCotent;
+            
+            textMessage.extra = jsonString;
+            
+        }else if ([messageCotent isKindOfClass:[RCVoiceMessage class]]) {
+            
+            RCVoiceMessage *voiceMessage = (RCVoiceMessage*)messageCotent;
+            
+            voiceMessage.extra = jsonString;
+            
+        }else if ([messageCotent isKindOfClass:[RCImageMessage class]]) {
+            
+            RCImageMessage *imageMessage = (RCImageMessage*)messageCotent;
+            
+            imageMessage.extra = jsonString;
+            
+        }
+
+    }else{
+        
+    }
+    
+    return messageCotent;
+}
+    以上的代码很简单，就是发送消息的前面，还没发送的时候，把自己（这时候就是老王自己）的信息，包装成JSONDic，然后在转成NSString，赋值给extra，这样对方就可以拿到我的信息了，就可以知道我的头像有没有更新了。
+    以下的代码就是解析JSON的过程，和上面交相呼应啊。对不对！
     NSString *extraString = [[message valueForKey:@"content"] valueForKey:@"extra"];
 
     if (extraString) {
@@ -1262,7 +1299,6 @@ char* const REALNAME   = "REALNAME";
             
         }
     }
-    
     
     //    {"sendUsersId":"85","sendUsersName":"快乐","sendUsersPhoto":"http://weixintest.ihk.cn/ihkwx_upload/userPhoto/13632415461-1449631301776.jpg"}
 
@@ -1549,7 +1585,6 @@ char* const REALNAME   = "REALNAME";
 }
 -(void)viewWillDisappear:(BOOL)animated{
     [super viewWillDisappear:animated];
-   //[self.navigationController.navigationBar wm_setBackgroundColor:kColor_Theme];
     //show
     self.navigationItem.title = @"";
 }
@@ -1868,11 +1903,8 @@ char* const REALNAME   = "REALNAME";
                 if (type==UsersTypeYouke) {
                     
                 }else if (type==UsersTypeCustomer){
-                    cell.typeNameLabel.text = @"合记专家";
-                    
-                    //判断是不是“合记专家”，红色 else 楼盘名  999999
-                    
-                    
+                    cell.typeNameLabel.text = @"专家";
+
                 }else if (type==UsersTypeSales){
                     cell.typeNameLabel.text = @"客户";
                     cell.typeNameLabel.textColor = kFontColor_999999;

@@ -131,7 +131,7 @@ _conversationVC.title = [NSStringstringWithFormat:@"%@",model.data[@"realName"]]
 
 
 
-ConversationViewController是开发者自己建立的VC，继承融云的RCConversationViewController类，继承之后，子类就可以用重写父类的方法了，想用什么就点进去找什么方法
+ConversationViewController是开发者自己建立的VC，继承融云的RCConversationViewController类，继承之后，子类就可以用重写父类的方法了，想用什么就点进去找什么方法，如果你也不知道你需要什么方法，那么就跟着我的文章走，我将会介绍大部分融云API的使用场景。
 
 好了，现在可以发送消息了，因为RCConversationViewController类已经实现了UI和功能。
 
@@ -140,6 +140,9 @@ ConversationViewController是开发者自己建立的VC，继承融云的RCConve
 理论篇到此结束。下面会有开发篇，谢谢。有问题在我的开发群里提问，群号487599875.
 
 
+－－－－－－－－－－－－－－－－－－－－－－－－－－华丽丽的分割线－－－－－－－－－－－－－－－－－－－－－－－－
+－－－－－－－－－－－－－－－－－－－－－－－－－－华丽丽的分割线－－－－－－－－－－－－－－－－－－－－－－－－
+－－－－－－－－－－－－－－－－－－－－－－－－－－华丽丽的分割线－－－－－－－－－－－－－－－－－－－－－－－－
 
 
 
@@ -152,35 +155,57 @@ ConversationViewController是开发者自己建立的VC，继承融云的RCConve
 
 好了，不扯淡了，开始集成。
 
-一，去融云官网（http://www.rongcloud.cn)下载SDK。补充一句最好用官网最新的SDK，千万不要倒退啊，最新的SDK比较完善，把以前旧版本的SDK的bug都修复了，当然肯定还有bug存在，但是已经比较少了，而且你也不一定就踩到雷了，如果踩到了，去给融云发工单，每个工单都会得到回答，大部分会令你满意的，不满意也没办法。好了，下载完之后找到SDK的文件夹，打开，然后自己在自己工程中建立一个新的文件夹比如我的就是RongCloud_SDK_2_2_4，这样清晰明了的看到了作用和版本号，再然后就是拖SDK进来工程中的文件夹RongCloud_SDK_2_2_4，除去release_notes_ios.txt不用拖进来，其他的都拖进来，不然你就拖了两个frameWork，后面开发中肯定你会叫，为什么我的表情😊出不来，为什么我的是英文的，各种奇葩bug出现了，愿意就在此，你要把emoji的plist文件和语言国际化的东东也一起拉进工程。记得点击copy选项。
+一，去融云官网（http://www.rongcloud.cn)下载SDK。补充一句最好用官网最新的SDK，千万不要倒退啊，最新的SDK比较完善，把以前旧版本的SDK的bug都修复了，当然肯定还有bug存在，但是已经比较少了，而且你也不一定就踩到雷了，如果踩到了，去给融云发工单，每个工单都会得到回答，大部分会令你满意的，不满意也没办法。好了，下载完之后找到SDK的文件夹，打开，然后自己在自己工程中建立一个新的文件夹比如我的就是RongCloud_SDK_2_2_4，这样清晰明了的看到了作用和版本号，再然后就是拖SDK进来工程中的文件夹RongCloud_SDK_2_2_4，除去release_notes_ios.txt不用拖进来，其他的都拖进来，不然你就拖了两个frameWork，后面开发中肯定你会叫，为什么我的表情😊出不来，为什么我的是英文的，各种奇葩bug出现了，原因就在此，你要把emoji的plist文件和语言国际化的东东也一起拉进工程。记得点击copy选项。
 
 二，添加frameWork，而且要全面。在第一步的基础上添加融云SDK的依赖库，都是系统的，官网有库列表，慢慢加。
 
 AssetsLibrary.framework
+
 AudioToolbox.framework
+
 AVFoundation.framework
+
 CFNetwork.framework
+
 CoreAudio.framework
+
 CoreGraphics.framework
+
 CoreLocation.framework
+
 CoreMedia.framework
+
 CoreTelephony.framework
+
 CoreVideo.framework
+
 ImageIO.framework
+
 libc++.tbd
+
 libc++abi.tbd
+
 libsqlite3.tbd
+
 libstdc++.tbd
+
 libxml2.tbd
+
 libz.tbd
+
 MapKit.framework
+
 OpenGLES.framework
+
 QuartzCore.framework
+
 SystemConfiguration.framework
+
 UIKit.framework
 
 三、导入头文件
 #import <RongIMKit/RongIMKit.h>
+import <RongIMKit/RongIMKit.h>
 
 这个一般应该是在appdelegate里面倒入，因为程序入口，我们要初始化融云的appkey（理论篇有详细介绍，开发篇不再赘述）。
 在这个方法中初始化
@@ -198,12 +223,15 @@ UIKit.framework
 
     if ([kNetwork_Host isEqualToString:@"http://weixintest.ihk.cn"]) {//正式环境用正式key，开发测试环境用测试的key
 
-        rongYunKey = @"yourAPPKey";
+        rongYunKey = @"your 正式appkey";
+
+    }else{
+            rongYunKey = @"your 测试appkey";
 
     }
-
+//初始化appkey
     [[RCIM sharedRCIM] initWithAppKey:rongYunKey];
-
+//初始化全局的单例RCDataManager（融云数据管理者）
     [RCIM sharedRCIM].userInfoDataSource = [RCDataManager shareManager];
 
 /**enableMessageAttachUserInfo
@@ -216,7 +244,7 @@ UIKit.framework
     [RCIM sharedRCIM].enableMessageAttachUserInfo = YES;
 
 
-
+//登录融云（注意这里是第n次登录，n>1，第一次登录的逻辑在登录页面点击登录按钮的时候，一样调用这句话，因为逻辑全交给RCDataManager处理了，外部调用方法即可）
     [[RCDataManager shareManager] loginRongCloud];
 
 }
@@ -226,7 +254,7 @@ RCDataManager是个单例类，主要功能就是登录融云，刷新好友列�
 
 @interface RCDataManager : NSObject<RCIMUserInfoDataSource>
 
-
+RCIMUserInfoDataSource是融云的好友提供者代理，很重要，非常重要，及其重要，遵守之，实现之。
 
 
 
@@ -258,7 +286,8 @@ RCDataManager是个单例类，主要功能就是登录融云，刷新好友列�
 
 @end
 
-－－－－－－－－－－－－－－－－－－－－－－－－－－－－－华丽丽的分割线－－－－－－－－－－－－－－－－－－－－－－－－－－－－－
+
+
 再看实现文件里面的代码
 
 #import "RCDataManager.h"
@@ -317,11 +346,6 @@ RCDataManager是个单例类，主要功能就是登录融云，刷新好友列�
 
     //不能聊天
 
-        NSLog(@"游客 发送通知");
-
-
-
-        [[NSNotificationCenter defaultCenter] postNotificationName:@"alreadyLogin" object:nil];
 
     }
 
@@ -649,10 +673,10 @@ RCDataManager是个单例类，主要功能就是登录融云，刷新好友列�
 @end
 
 
-－－－－－－－－－－－－－－－－－－－－－－－－－－－－－华丽丽的分割线－－－－－－－－－－－－－－－－－－－－－－－－－－－－－
 
 
-再看RCUerInfo的category的.m文件。这里用了runtime的知识，不懂的请自行百度
+
+再看RCUerInfo的category的.m文件。这里用了runtime的知识，不懂的请自行百度或者参考此链接http://www.cnblogs.com/wupher/archive/2013/01/05/2845338.html
 #import "RCUserInfo+Addition.h"
 
 #import <objc/runtime.h>
@@ -1020,3 +1044,1069 @@ char* const REALNAME   = "REALNAME";
 好，到此处，已经把融云的逻辑分离出来，并且登录了融云服务器。下一篇章该讲如何聊天，生成聊天列表，显示头像名字等。
 持续关注，持续更新，谢谢。博主原创，不得转载，谢谢。
 
+
+
+－－－－－－－－－－－－－－－－－－－－－－－－－－华丽丽的分割线－－－－－－－－－－－－－－－－－－－－－－－－
+－－－－－－－－－－－－－－－－－－－－－－－－－－华丽丽的分割线－－－－－－－－－－－－－－－－－－－－－－－－
+－－－－－－－－－－－－－－－－－－－－－－－－－－华丽丽的分割线－－－－－－－－－－－－－－－－－－－－－－－－
+
+
+
+
+
+
+ 说说融云即时通讯SDK开发篇(三)
+ 
+ 
+      接着开发篇二的内容，我们已经把融云的逻辑分离出来，并且登录了融云服务器。此篇章讲如何聊天，生成聊天列表，显示头像名字等。
+      各个APP的界面UI设计的不同，每个开发者的需求也不同，但是万变不离其宗，我们抓住不变的地方，也就是共同之处。那么共同之处在哪里？就是我们要触发一个事件，比如点击了一个cell，或者点击了一个Button，又或者我们调用一个接口后台返回给我们一个人的信息，那么各个开发者触发这一系列的事件都是为了和某个人聊天，触发事件的时候，我们一定要拿到对应事件的这个人的信息（userInfo，包含很多字段，各个开发者需求不同，字段肯定就不同，但是userId一定有的，这个是相同之处）。举个栗子，比如进入一个tableView展示的列表，那么我们点击cell，动态的去取到每个cell对应到人的信息，然后就是在点击cell的事件里面配置我们ConversationViewController的属性了，那么代码在下面。
+      
+      
+      ConversationViewController *_conversationVC = [[ConversationViewController alloc]init];
+                                _conversationVC.conversationType = ConversationType_PRIVATE;
+                                _conversationVC.targetId = [NSString stringWithFormat:@"%@",model.data[@"id"]];
+                                
+                                _conversationVC.userName = [NSString stringWithFormat:@"%@",model.data[@"agentTeamName"]];
+                                _conversationVC.title = [NSString stringWithFormat:@"%@",model.data[@"realName"]];
+                                
+                                //                            _conversationVC.title = [NSString stringWithFormat:@"%@ %@",model.data[@"realName"],model.data[@"agentTeamName"]];
+                                [hud removeFromSuperview];
+
+                                [self.navigationController pushViewController:_conversationVC animated:YES];
+ 这里的ConversationViewController是我自己的VC继承RCConversationViewController，RCConversationViewController是用的融云写的UI，就是说这个RCConversationViewController里面的UI全部写好了，就很类似QQ聊天的界面，键盘啊，表情啊，发送图片啊，发送语音啊，一切的一切都搞定了。我们只需要配置一些属性，然后push就可以了。如果我们有自己的需求UI，我们也可以适当的在ConversationViewController基础上修改。（关于RCConversationViewController里面很多方法和属性，后续会慢慢涉及到，现在功能上没有涉及，所以先介绍到这里，后续讲解更高级的功能，就可以把更多的API给带出来，这样才有使用的场景，才更容易理解。）
+ 
+     那么每个app几乎都会有类似聊天列表的界面。描述一下，就是聊天之后会生成cell把，和10个人聊过天就有10个cell，就是QQ里面的聊天列表了。对应在融云这边就是RCConversationListViewController，注意，这个RCConversationListViewController我们也不能直接用啊，我们也要写一个自己的VC，那就是ChatViewController继承融云的RCConversationListViewController，这个ChatViewController就是我们自己写的聊天列表了，我们一旦有和某人聊天，那么自动会生成一个cell到这个vc里面，里面的机制大家不要去试图理解了，融云已经封装好了，一旦你和老王，前提老王是你的好友，并且你登录了融云服务器，那么你聊天后就可以回来这个vc看了，肯定出了一个cell，显示的是老王的名字和头像。那么下面我就把这个聊天列表VC的功能和API详细的介绍下，继续大尺度（没用人其他人愿意这么大尺度了，绝对的福利）的贴代码：
+     .h里面代码
+     #import "BaseViewController.h"
+
+@interface ChatViewController : RCConversationListViewController
+
+
+@end
+再看.m实现文件里面代码
+#import "ChatViewController.h"
+#import "RCCustomCell.h"
+#import "LoginViewController.h"
+#import "SpecialAgentViewController.h"
+
+@interface ChatViewController ()<RCIMReceiveMessageDelegate,RCIMConnectionStatusDelegate
+,UIAlertViewDelegate,UITableViewDataSource,UITableViewDelegate>{
+    UIView *bgView;
+    UILabel *desLabel;
+    UIImageView *defaultIV;
+    UIView *firstShowView;
+    UIImageView  *headerIV;
+    MBProgressHUD *hud;
+    UIImageView *aIV;
+    UILabel *aLabel;
+}
+
+@end
+
+@implementation ChatViewController
+
+- (void)dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:RCKitDispatchMessageNotification object:nil];
+}
+
+
+- (instancetype)init{
+    self = [super init];
+    if (self) {
+        [[UIApplication sharedApplication]setStatusBarStyle:UIStatusBarStyleLightContent];
+        [self setConversationAvatarStyle:RC_USER_AVATAR_CYCLE];
+        [self setDisplayConversationTypes:@[@(ConversationType_PRIVATE)]];//这里是会话类型，我只用单聊，所以是ConversationType_PRIVATE，如果你的还有群聊，等，那么点进去，看到一个枚举，找到他们，需要什么类型就加什么类型
+        [RCIM sharedRCIM].receiveMessageDelegate = self;//这个是接收消息的监听代理
+        [RCIM sharedRCIM].connectionStatusDelegate = self;
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(didReceiveMessageNotification:)name:RCKitDispatchMessageNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(removeLoginHud:) name:@"alreadyLogin" object:nil];
+        hud = [[MBProgressHUD alloc]initWithView:self.view];
+        hud.square = YES;
+        [self.view addSubview:hud];
+        
+    }
+    return self;
+}
+
+/**
+ * @brief 生成当天的某个点（返回的是伦敦时间，可直接与当前时间[NSDate date]比较）
+ * @param hour 如hour为“8”，就是上午8:00（本地时间）
+ */
+- (NSDate *)getCustomDateWithHour:(NSInteger)hour
+{
+    //获取当前时间
+    NSDate *currentDate = [NSDate date];
+    NSCalendar *currentCalendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSGregorianCalendar];
+    NSDateComponents *currentComps = [[NSDateComponents alloc] init];
+    
+    NSInteger unitFlags = NSYearCalendarUnit | NSMonthCalendarUnit | NSDayCalendarUnit | NSWeekdayCalendarUnit | NSHourCalendarUnit | NSMinuteCalendarUnit | NSSecondCalendarUnit;
+    
+    currentComps = [currentCalendar components:unitFlags fromDate:currentDate];
+    
+    //设置当天的某个点
+    NSDateComponents *resultComps = [[NSDateComponents alloc] init];
+    [resultComps setYear:[currentComps year]];
+    [resultComps setMonth:[currentComps month]];
+    [resultComps setDay:[currentComps day]];
+    [resultComps setHour:hour];
+    
+    NSCalendar *resultCalendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSGregorianCalendar];
+    return [resultCalendar dateFromComponents:resultComps];
+}
+// @param message 收到的消息实体。
+// @param nLeft   剩余消息数。
+// 这里是融云的监听消息事件，这个代理会在每次接收到消息的时候走，所以我们可以在这个方法中处理逻辑了，我处理的逻辑有勿扰时段和头像的及时更新等等
+-(void)onRCIMReceiveMessage:(RCMessage *)message left:(int)left
+{
+
+    
+  /*  这个RCMessage是融云的消息体，我姑且称他为消息体，每个消息都是消息体，消息体本身带有很多的信息，我贴上融云源代码，大家看看
+    @interface RCMessage : NSObject <NSCopying, NSCoding>
+/** 会话类型 */
+@property(nonatomic, assign) RCConversationType conversationType;
+/** 目标ID，如讨论组ID, 群ID, 聊天室ID */
+@property(nonatomic, strong) NSString *targetId;
+/** 消息ID */
+@property(nonatomic, assign) long messageId;
+/** 消息方向 */
+@property(nonatomic, assign) RCMessageDirection messageDirection;
+/** 发送者ID */
+@property(nonatomic, strong) NSString *senderUserId;
+/** 接受状态 */
+@property(nonatomic, assign) RCReceivedStatus receivedStatus;
+/**发送状态 */
+@property(nonatomic, assign) RCSentStatus sentStatus;
+/** 接收时间 */
+@property(nonatomic, assign) long long receivedTime;
+/**发送时间 */
+@property(nonatomic, assign) long long sentTime;
+/** 消息体名称 */
+@property(nonatomic, strong) NSString *objectName;
+/** 消息内容 */
+@property(nonatomic, strong) RCMessageContent *content;
+/** 附加字段 */
+@property(nonatomic, strong) NSString *extra;
+
+/**
+ *  指派初始化方法，根据给定信息初始化实例
+ *
+ *  @param  conversationType    会话类型
+ *  @param  targetId            目标ID，如讨论组ID, 群ID, 聊天室ID
+ *  @param  messageDirection    消息方向
+ *  @param  messageId           消息ID
+ *  @param  content             消息体内容字段
+ */
+- (instancetype)initWithType:(RCConversationType)conversationType
+                    targetId:(NSString *)targetId
+                   direction:(RCMessageDirection)messageDirection
+                   messageId:(long)messageId
+                     content:(RCMessageContent *)content;
+
+/**
+ *  根据服务器返回JSON创建新实例
+ *
+ *  @param  jsonData    JSON数据字典
+ */
++ (instancetype)messageWithJSON:(NSDictionary *)jsonData;
++ 
+
+*/
+接着，别看晕喽，这个消息体是不是很多信息在里面，那么我需要的就是这个content字段，以及这个extra。我现在给出一个思路去解决好友头像更新之后，我不能马上看到好友的新头像问题。那么假设我和老王正在聊天，聊的很热乎，突然老王去设置里面更新了个头像，我还继续和老王聊天，我能看到老王的新头像吗？你猜猜，如果你深入的看了理论篇，并切理解了理论篇，你就很清楚的知道，我肯定是看不到老王的新头像的，为什么，因为我app启动的时候就把老王的信息保存到全局数组里面了，而且融云的聊天列表实际上是有缓存的，我猜测是用数据库存储的。所以我不从新启动app的情况下，我是不可能看到老王的新头像的。那么如何解决这个问题呢？
+方案有两个：
+第一个，谁更新了头像就要给他自己的所有好友发送通知消息，这个是融云官方给的方案，我感觉不是太好，这是简单粗暴的。比如老王有1000个好友，那么老王更新了头像，那么就要给这1000个好友发送一条通知信息，通知他的所有的好友，哎！注意了，赶紧更新我的最新信息，我已经更新信息了，那么1000个好友很多都不在线，你发了也是浪费流量，而且很多人，可能有999个人是不关心你更不更新头像的呀！老王你烦不烦，老是更新头像给我发消息。所以这个方法不是很好。
+第二个，我觉得从消息入手，你老王更新了头像，你只要给我发送任何聊天消息我就能检测到你换了头像。怎么检测，那么我们来捋一捋这个逻辑，首先是老王和我在聊天，显示的是现在的头像，突然老王去换了头像，哎，我不知道啊，如果我给老王发消息，老王不理我我，我是拿不到老王的新头像的，那么一旦老王有回复我，就是老王有发一条任意类型的消息（消息有很多类型，语音消息，图片消息，地理位置消息等），我就从消息中获得老王的信息，信息中包含头像字段，那么就可以比较了，如果头像的url改变了，那么说明老王你更新了头像，我检测到了就马上刷新好友的最新信息并放全局数组中，并更新融云的缓存，这个缓存很重要，不更新缓存不行，不更新缓存就等于白做了，更新缓存的方法是  [[RCIM sharedRCIM] refreshUserInfoCache:theLastedInfo withUserId:userInfoDic[@"sendUsersId"]];哇靠！这个方案好，让每条消息带有对方的信息，信息是个json的字符串，几乎可以忽略占用流量的大小，而且是最新的信息，不用给不聊天的好友发送通知信息了。好了，看下面代码。
+我们用kvo拿到这个附加信息的字符串，是个json格式的字符串，一定要用kvo，不然你用.是拿不到的。Xcode后台调试，可以直接看到这些字段。
+    NSString *extraString = [[message valueForKey:@"content"] valueForKey:@"extra"];
+
+    if (extraString) {
+        NSData *jsonData = [extraString dataUsingEncoding:NSUTF8StringEncoding];
+        NSError *err;
+        if (jsonData) {
+        拿到字符串，转换称Data，然后转成我们经常用的字典。
+            NSDictionary *userInfoDic = [NSJSONSerialization JSONObjectWithData:jsonData
+                                                                        options:NSJSONReadingMutableContainers
+                                                                          error:&err];
+            NSLog(@"FFFFF%@",userInfoDic);
+            if (userInfoDic) {
+            用RCDataManager的API直接拿到发送者老王的userInfo，然后下面就是比较头像的url是否一样了。
+                RCUserInfo *senderInfo = [[RCDataManager shareManager] currentUserInfoWithUserId:userInfoDic[@"sendUsersId"]];
+                
+                RCUserInfo *theLastedInfo = [[RCUserInfo alloc]initWithUserId:userInfoDic[@"sendUsersId"] name:userInfoDic[@"sendUsersName"] portrait:userInfoDic[@"sendUsersPhoto"] phone:senderInfo.phone addressInfo:senderInfo.addressInfo realName:senderInfo.realName];
+                
+                
+                if ([userInfoDic[@"sendUsersPhoto"] isEqualToString:senderInfo.portraitUri]) {
+                    
+                }else{
+                这里更新好友的最新列表
+                    [[RCDataManager shareManager] syncFriendList:^(NSMutableArray *friends, BOOL isSuccess) {
+                        if (isSuccess) {
+                        这里更新融云缓存
+                            [[RCIM sharedRCIM] refreshUserInfoCache:theLastedInfo withUserId:userInfoDic[@"sendUsersId"]];
+                            
+                        }else{
+                            [[RCDataManager shareManager] syncFriendList:^(NSMutableArray *friends, BOOL isSuccess) {
+                                
+                            }];
+                        }
+                    }];
+                }
+            }
+            
+            
+        }
+    }
+    
+    
+    //    {"sendUsersId":"85","sendUsersName":"快乐","sendUsersPhoto":"http://weixintest.ihk.cn/ihkwx_upload/userPhoto/13632415461-1449631301776.jpg"}
+
+    NSString *notTroubleStr = [TheUserDefaults objectForKey:@"setSpareTimeYES"];
+下面处理的是勿扰时段，就是何时有声音，何时没声音，何时有震动，何时无震动，如果app设置里面没用这些设置项，那么请忽略
+    if ([notTroubleStr isEqualToString:@"setSpareTimeNO"]) {
+        
+        [self RemindSwitch];
+
+    }else if ([notTroubleStr isEqualToString:@"setSpareTimeYES"]){
+        
+        NSString *timeDuring = [TheUserDefaults objectForKey:@"spareTimeStr"];//11位时间  21:00-09:00
+        NSString *fromHourStr = [timeDuring substringToIndex:2];
+        NSString *toHourStr   = [timeDuring substringWithRange:NSMakeRange(6,2)];
+        NSInteger fromHour=0;
+        NSInteger toHour =0;
+        if ([fromHourStr hasPrefix:@"0"]) {
+            fromHour = [[fromHourStr substringWithRange:NSMakeRange(1, 1)] integerValue];
+        }else{
+            fromHour = [fromHourStr integerValue];
+        }
+        
+        if ([toHourStr hasPrefix:@"0"]) {
+            toHour = [[toHourStr substringWithRange:NSMakeRange(1, 1)] integerValue];
+        }else{
+            toHour = [toHourStr integerValue];
+        }
+        NSLog(@"fromHour =%ld ,toHour = %ld",fromHour,toHour);
+        NSString *nowString  = [MSUtil gethhmmss];//01:28:02
+        nowString = [nowString substringToIndex:2];
+        if ([nowString hasPrefix:@"0"]) {
+            nowString = [nowString substringFromIndex:0];
+        }else{
+            
+        }
+        NSLog(@"%@",nowString);
+//        NSDate *nowDate = [self getCustomDateWithHour:fromHour];
+
+        if (fromHour>toHour) {//21－－9跨天
+            if ([nowString integerValue]>=fromHour||[nowString integerValue]<=toHour) {
+                [RCIM sharedRCIM].disableMessageAlertSound = YES;//关闭声音
+                
+            }else{
+                [self RemindSwitch];
+            }
+        }else if(fromHour==toHour){//8--8相同
+            if ([nowString integerValue]==fromHour) {
+                [RCIM sharedRCIM].disableMessageAlertSound = YES;//关闭声音
+
+            }else{
+                [self RemindSwitch];
+            }
+        }else if(fromHour<toHour){//6----10当天
+            
+            if ([nowString integerValue]>=fromHour&&[nowString integerValue]<=toHour) {
+                [RCIM sharedRCIM].disableMessageAlertSound = YES;//关闭声音
+
+            }else{
+                [self RemindSwitch];
+            }
+        }
+    }
+    
+    if (![[RCDataManager shareManager] hasTheFriendWithUserId:message.senderUserId]) {
+        //检查message.senderUserId这个人在不在我好友里面，如果没有在，测网络刷新最新的好友列表
+        [[RCDataManager shareManager] syncFriendList:^(NSMutableArray *friends,BOOL isSuccess) {
+            [[RCDataManager shareManager] getUserInfoWithUserId:message.senderUserId completion:^(RCUserInfo *userInfo) {
+                NSLog(@"名字 ＝ %@  ID ＝ %@",userInfo.name,userInfo.userId);
+            }];
+        }];
+    }
+    [[RCDataManager shareManager] getUserInfoWithUserId:message.senderUserId completion:^(RCUserInfo *userInfo) {
+        NSLog(@"名字 ＝ %@  ID ＝ %@",userInfo.name,userInfo.userId);
+    }];
+    [self setDisplayConversationTypeArray:@[@(ConversationType_PRIVATE)]];
+    [self refreshConversationTableViewIfNeeded];
+    [[RCDataManager shareManager] refreshBadgeValue];
+}
+
+- (void)RemindSwitch {
+    
+    NSString *setShake = [TheUserDefaults objectForKey:@"setShakeYES"];
+    NSString *setSound=[[NSUserDefaults standardUserDefaults]objectForKey:@"setSoundYES"];
+
+    if (setShake && [setShake isEqualToString:@"setShakeYES"]) {
+        AudioServicesPlayAlertSound(kSystemSoundID_Vibrate);//震动
+    }
+    
+    if(setSound && [setSound isEqualToString:@"setSoundYES"])
+    {//有声音，这个方法可以设置融云接收消息时候的声音的有和无
+        [RCIM sharedRCIM].disableMessageAlertSound = NO;
+    }
+    else{//无声音
+        [RCIM sharedRCIM].disableMessageAlertSound = YES;
+    }
+}
+#pragma mark - RCIMConnectionStatusDelegate
+这个是检测连接connect状态的代理，踢人的功能可以做在这里，逻辑是，staue＝ConnectionStatus_KICKED_OFFLINE_BY_OTHER_CLIENT，就是被T了，然后弹出提示框，提示用户“您的帐号已在别的设备上登录，\n您被迫下线！”，然后点击确定就要调用登出的接口，处理登出的逻辑了，每位开发者自己处理登出的逻辑，登出的逻辑可以单独抽离出来。
+/**
+ *  网络状态变化。
+ *  @param status 网络状态。
+ */
+- (void)onRCIMConnectionStatusChanged:(RCConnectionStatus)status {
+    NSLog(@"RCConnectionStatus = %ld",(long)status);
+    if (status == ConnectionStatus_KICKED_OFFLINE_BY_OTHER_CLIENT) {
+        UIAlertView *alert = [[UIAlertView alloc]
+                              initWithTitle:nil
+                              message:@"您的帐号已在别的设备上登录，\n您被迫下线！"
+                              delegate:self
+                              cancelButtonTitle:@"知道了"
+                              otherButtonTitles:nil, nil];
+        [alert show];
+    }
+}
+
+-(id)initWithCoder:(NSCoder *)aDecoder{
+    self =[super initWithCoder:aDecoder];
+    if (self) {
+        //设置要显示的会话类型
+        [self setDisplayConversationTypes:@[@(ConversationType_PRIVATE)]];
+         [self setConversationAvatarStyle:1];
+    }
+    return self;
+}
+-(void)callSpecialAgent:(UITapGestureRecognizer *)sender{
+    if (firstShowView) {
+        [firstShowView removeFromSuperview];
+        firstShowView = nil;
+        
+    }
+    SpecialAgentViewController *saVC = [[SpecialAgentViewController alloc]init];
+    [self.navigationController pushViewController:saVC animated:YES];
+}
+#pragma mark 
+#pragma mark  viewDidLoad
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.edgesForExtendedLayout = UIRectEdgeNone;
+    self.view.backgroundColor = [UIColor whiteColor];
+    //设置title
+    UIView *netWorkView = (UIView *)self.networkIndicatorView;
+    netWorkView.frame = CGRectZero;
+    netWorkView.hidden = YES;
+    [netWorkView removeFromSuperview];
+    self.navigationItem.title=KTitle_isShowAllSame?KTitle_SameStr: @"合记买楼";
+
+    //布局
+    UIImage *headerImage = [UIImage imageNamed:@"hjtgdk.jpg"];
+    CGFloat radi = headerImage.size.width/headerImage.size.height;
+    headerIV =[[UIImageView  alloc]initWithFrame:CGRectMake(0, 0, self.conversationListTableView.frame.size.width, self.conversationListTableView.frame.size.width/(radi))];
+    headerIV.userInteractionEnabled = YES;
+    headerIV.image = headerImage;
+    NSLog(@"%@",self.conversationListTableView);
+    NSLog(@"%@",headerIV);
+    [self.view addSubview:headerIV];
+    self.conversationListTableView.frame = CGRectMake(self.conversationListTableView.frame.origin.x, headerIV.frame.origin.y+headerIV.frame.size.height, self.conversationListTableView.frame.size.width, self.conversationListTableView.frame.size.height-headerIV.frame.size.height);
+    self.conversationListTableView.rowHeight = kCellHeight;
+    self.conversationListTableView.separatorStyle = UITableViewCellSeparatorStyleSingleLine;
+    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(callSpecialAgent:)];
+    [headerIV addGestureRecognizer:tap];
+    //设置tableView样式
+    self.conversationListTableView.backgroundColor = [MSUtil colorWithHexString:@"#e5e5e5"];
+//    self.conversationListTableView.backgroundColor = [UIColor whiteColor];
+    self.conversationListTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    
+    
+    if ([RCIM sharedRCIM].currentUserInfo.userId) {
+        if (self.conversationListDataSource.count==0) {
+            self.conversationListTableView.tableFooterView = [UIView new];
+        }else{
+            UIView *afooter = [[UIView alloc]initWithFrame:CGRectMake(0, 0, self.conversationListTableView.frame.size.width, 0.5)];
+            afooter.backgroundColor = [UIColor lightGrayColor];
+            self.conversationListTableView.tableFooterView = afooter;
+        }
+    }else{
+        self.conversationListTableView.tableFooterView = [UIView new];
+    }
+    if ([TheUserDefaults boolForKey:@"everShow"]==NO) {
+        firstShowView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, kScreenWidth, kScreenHeight-kNavbarHeight-kTabBarHeight)];
+        firstShowView.backgroundColor = [UIColor colorWithWhite:0.2 alpha:0.95];
+        [self.view addSubview:firstShowView];
+        [self.view bringSubviewToFront:firstShowView];
+        [TheUserDefaults setBool:YES forKey:@"everShow"];
+        [TheUserDefaults synchronize];
+       
+        
+        UIImage *image = [UIImage imageNamed:@"hjtgdc"];
+        float radio = image.size.width/image.size.height;
+        UIImageView *centerIV = [[UIImageView alloc]initWithFrame:CGRectMake(0, firstShowView.frame.size.height-((kScreenWidth-2*30)/radio)/2, kScreenWidth-2*30, (kScreenWidth-2*30)/radio)];
+        centerIV.image = image;
+        centerIV.userInteractionEnabled = YES;
+        centerIV.center = firstShowView.center;
+        [firstShowView addSubview:centerIV];
+        UIButton *Xbtn = [UIButton buttonWithType:UIButtonTypeCustom];
+        Xbtn.frame = CGRectMake(centerIV.frame.size.width-50+5, -5, 50, 50);
+        [Xbtn setImage:[UIImage imageNamed:@"chatDelete"] forState:UIControlStateNormal];
+        [Xbtn setImage:[UIImage imageNamed:@"chatDelete"] forState:UIControlStateSelected];
+        [Xbtn addTarget:self action:@selector(removeShowView:) forControlEvents:UIControlEventTouchUpInside];
+        [centerIV addSubview:Xbtn];
+        [centerIV bringSubviewToFront:Xbtn];
+        UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(callSpecialAgent:)];
+        [centerIV addGestureRecognizer:tap];
+    }
+}
+-(void)removeShowView:(UIButton *)sender{
+    if (firstShowView) {
+        [firstShowView removeFromSuperview];
+        firstShowView = nil;
+    }
+    [self showEmptyConversationView];
+}
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    [[UIApplication sharedApplication]setStatusBarStyle:UIStatusBarStyleLightContent];
+    [self.navigationController.navigationBar wm_setBackgroundColor:kColor_Theme];
+    [self refreshConversationTableViewIfNeeded];
+    [self resetConversationListBackgroundViewIfNeeded];
+    if ([RCIMClient sharedRCIMClient].currentUserInfo.userId) {//登录
+        [[RCDataManager shareManager] refreshBadgeValue];
+        [self setDisplayConversationTypeArray:@[@(ConversationType_PRIVATE)]];
+        
+        aIV.hidden = NO;
+        aLabel.hidden = NO;
+        [bgView sendSubviewToBack:aIV];
+        [bgView sendSubviewToBack:aLabel];
+        [hud removeFromSuperview];
+    }else{//没登录
+        BaseNavigationController  *chatNav =[AppDelegate shareAppDelegate].rootTabbar.viewControllers[2];
+        chatNav.tabBarItem.badgeValue = nil;
+        [self setDisplayConversationTypeArray:nil];
+        
+        
+        if (self.conversationListDataSource.count) {//已登出，有数据
+//            [hud show:YES];
+            aIV.hidden = YES;
+            aLabel.hidden = YES;
+            [bgView sendSubviewToBack:aIV];
+            [bgView sendSubviewToBack:aLabel];
+            [hud removeFromSuperview];
+
+        }else{//已登出，没数据
+            [hud show:NO];
+            aIV.hidden = NO;
+            aLabel.hidden = NO;
+            [hud removeFromSuperview];
+        }
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self refreshConversationTableViewIfNeeded];
+            [self showEmptyConversationView];
+        });
+    }
+    [self showEmptyConversationView];
+
+}
+-(void)removeLoginHud:(NSNotification *)obj{
+    NSLog(@"收到通知");
+    if (hud) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+           
+            [self setDisplayConversationTypeArray:@[@(ConversationType_PRIVATE)]];
+
+            [self performSelector:@selector(refershTable) withObject:nil afterDelay:0.5];
+        });
+        
+    }
+}
+-(void)refershTable{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.conversationListTableView reloadData];
+        [self performSelector:@selector(refershTableIfNeeded) withObject:nil afterDelay:0.5];
+    });
+}
+-(void)refershTableIfNeeded{
+    [hud hide:YES];
+    [hud removeFromSuperview];
+    aIV.hidden  = NO;
+    aLabel.hidden = NO;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self refreshConversationTableViewIfNeeded];
+        [self showEmptyConversationView];
+    });
+    
+}
+-(void)viewWillDisappear:(BOOL)animated{
+    [super viewWillDisappear:animated];
+   //[self.navigationController.navigationBar wm_setBackgroundColor:kColor_Theme];
+    //show
+    self.navigationItem.title = @"";
+}
+
+#pragma mark override
+//通知更新未读消息数目，用于显示未读消息，当收到会话消息的时候，会触发一次。
+- (void)notifyUpdateUnreadMessageCount{
+    [[RCDataManager shareManager] refreshBadgeValue];
+}
+-(void)loginorRegister:(UIButton *)sender{
+    [self.navigationController pushViewController:[LoginViewController new] animated:YES];
+}
+//重写方法，设置会话列表emptyConversationView的视图。//无聊天cell的时候一般会显示一个默认的图片或者加一些button或者一些imageView啊等等，那么逻辑就是在下面的这个方法中处理，我的方法不是最好的，如果有同学有好方法欢迎找我交流个人QQ740747055.谢谢
+- (void)showEmptyConversationView{
+    UsersType type = [MSUtil checkUserType];
+    
+    if (firstShowView) {
+        return;
+    }
+    if (bgView==nil) {
+      UIImage *  nochatDataImage = [UIImage imageNamed:@"nochatData"];
+        bgView = [[UIView alloc]initWithFrame:CGRectMake(0, (kScreenHeight-kNavbarHeight-headerIV.frame.size.height-kTabBarHeight)/2-nochatDataImage.size.height/2, kScreenWidth, nochatDataImage.size.height+kNavbarHeight)];
+        bgView.hidden  = NO;
+        bgView.center = self.conversationListTableView.center;
+        aIV = [[UIImageView alloc]initWithFrame:CGRectMake(kScreenWidth/2-nochatDataImage.size.width/2, 0, nochatDataImage.size.width, nochatDataImage.size.height)];
+        aIV.image = nochatDataImage;
+        [bgView addSubview:aIV];
+        
+        aLabel = [[UILabel alloc]initWithFrame:CGRectMake(0, aIV.frame.origin.y+aIV.frame.size.height, bgView.frame.size.width, kNavbarHeight)];
+        aLabel.text = @"暂无聊天数据";
+        aLabel.textColor = kFontColor_999999;
+        aLabel.textAlignment = NSTextAlignmentCenter;
+        [bgView addSubview:aLabel];
+      
+//        UserInfoModel *userinfo = [UserInfoModel currentUserinfo];
+//
+//        if (userinfo.login==YES&&![userinfo.userId isEqualToString:@""]&&![RCIMClient sharedRCIMClient].currentUserInfo.userId) {
+//            
+//            aIV.hidden = YES;
+//            aLabel.hidden = YES;
+//            
+//        }else{
+//            aIV.hidden = NO;
+//            aLabel.hidden = NO;
+//        }
+        
+        
+        
+        
+        
+    }
+    
+    
+    if ([RCIM sharedRCIM].currentUserInfo.userId) {//登录了
+        if (type==UsersTypeYouke) {
+
+        }else if (type==UsersTypeCustomer){
+            self.emptyConversationView = bgView;
+            if (self.conversationListDataSource.count) {//有数据
+                
+            }else{//没数据
+                self.emptyConversationView = bgView;
+                
+                [hud show:NO];
+                aIV.hidden = NO;
+                aLabel.hidden = NO;
+                [hud removeFromSuperview];
+            }
+            
+            
+        }else if (type==UsersTypeSales){
+
+            if (self.conversationListDataSource.count) {//有数据
+
+                
+            }else{//没数据
+                self.emptyConversationView = bgView;
+                
+                [hud show:NO];
+                aIV.hidden = NO;
+                aLabel.hidden = NO;
+                [hud removeFromSuperview];
+            }
+            
+            self.emptyConversationView = bgView;
+        }
+
+    }else{//没登录
+        self.emptyConversationView = bgView;
+        if (self.conversationListDataSource.count) {//已登出，有数据
+            aIV.hidden = YES;
+            aLabel.hidden = YES;
+            [bgView sendSubviewToBack:aIV];
+            [bgView sendSubviewToBack:aLabel];
+            [self.view bringSubviewToFront:self.conversationListTableView];
+            [hud removeFromSuperview];
+            
+        }else{//已登出，没数据
+             self.emptyConversationView = bgView;
+
+            [hud show:NO];
+            aIV.hidden = NO;
+            aLabel.hidden = NO;
+            [bgView bringSubviewToFront:aIV];
+            [bgView bringSubviewToFront:aLabel];
+            [hud removeFromSuperview];
+        }
+
+    }
+    
+    if ([self.view.subviews containsObject:bgView]) {
+        
+    }else{
+        [self.view addSubview:self.emptyConversationView];
+    }
+//
+}
+
+//*********************插入自定义Cell*********************//
+
+//插入自定义会话model
+-(NSMutableArray *)willReloadTableData:(NSMutableArray *)dataSource{
+    for (int i=0; i<dataSource.count; i++) {
+        RCConversationModel *model = dataSource[i];
+        if(model.conversationType == ConversationType_PRIVATE){
+            model.conversationModelType = RC_CONVERSATION_MODEL_TYPE_CUSTOMIZATION;
+        }
+    }
+    return dataSource;
+}
+#pragma mark
+#pragma mark onSelectedTableRow
+- (void)onSelectedTableRow:(RCConversationModelType)conversationModelType
+         conversationModel:(RCConversationModel *)model
+               atIndexPath:(NSIndexPath *)indexPath{
+    ConversationViewController *_conversationVC = [[ConversationViewController alloc]init];
+    _conversationVC.conversationType = model.conversationType;
+    _conversationVC.targetId = model.targetId;
+    for (RCUserInfo *userInfo in [AppDelegate shareAppDelegate].friendsArray) {
+        if ([model.targetId isEqualToString:userInfo.userId]) {
+            _conversationVC.userName = userInfo.name;
+            _conversationVC.title =[userInfo.realName isEqualToString:@""]?[NSString stringWithFormat:@"%@",userInfo.name]:[NSString stringWithFormat:@"%@",userInfo.realName];
+        }
+    }
+    [self.navigationController pushViewController:_conversationVC animated:YES];
+}
+#pragma mark
+#pragma mark 禁止右滑删除
+-(BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath{
+    return YES;
+}
+//左滑删除
+-(void)rcConversationListTableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath{
+    //可以从数据库删除数据
+    if (indexPath.row < self.conversationListDataSource.count) {
+    RCConversationModel *model = self.conversationListDataSource[indexPath.row];
+    [[RCIMClient sharedRCIMClient] removeConversation:ConversationType_PRIVATE targetId:model.targetId];
+    [self.conversationListDataSource removeObjectAtIndex:indexPath.row];
+    [self.conversationListTableView reloadData];
+    [[RCDataManager shareManager] refreshBadgeValue];
+    }
+}
+//高度
+-(CGFloat)rcConversationListTableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
+    return kCellHeight;
+}
+
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex{
+    
+    if ([UserInfoModel currentUserinfo].pushToken.length > 0 && [UserInfoModel currentUserinfo].userEncrypt.length > 0) {
+        
+        [Networking logout:^(NetworkModel *model) {
+            
+            if ([[NSString stringWithFormat:@"%@",model.result]isEqualToString:@"10000"]) {
+                [UserInfoModel logoutUserinfo];
+                
+                BaseNavigationController  *chatNav = [AppDelegate shareAppDelegate].rootTabbar.viewControllers[2];
+                chatNav.tabBarItem.badgeValue = nil;
+                [UIApplication sharedApplication].applicationIconBadgeNumber = 0;
+                
+                [[RCIMClient sharedRCIMClient] clearConversations:@[@(ConversationType_PRIVATE)]];
+                [[RCIMClient sharedRCIMClient] disconnect:NO];
+
+                BaseNavigationController *baseVC = (BaseNavigationController *)[AppDelegate shareAppDelegate].rootTabbar.selectedViewController;
+                [baseVC pushViewController:[[LoginViewController alloc]init] animated:YES];
+            }
+            else {
+                [MSUtil showTipsWithHUD:model.msg inView:self.view];
+            }
+            
+        } fail:^(NSError *error) {
+            [MSUtil showTipsWithHUD:kTips_NetworkError inView:self.view];
+        }];
+    }
+}
+
+-(void)willDisplayConversationTableCell:(RCConversationBaseCell *)cell atIndexPath:(NSIndexPath *)indexPath{
+    if ([cell isMemberOfClass:[RCCustomCell  class]]) {
+        RCCustomCell *conversationCell = (RCCustomCell *)cell;
+//        conversationCell.conversationTitle.text=@"";
+        
+        RCConversationModel *model = self.conversationListDataSource[indexPath.row];
+//        conversationCell.conversationTitle.text = [[RCDataManager shareManager] currentNameWithUserId:model.targetId];
+//        if (model) {
+//            if (model.targetId) {
+//                if ([[AppDelegate shareAppDelegate].friendsArray containsObject:[[RCDataManager shareManager] currentUserInfoWithUserId:model.targetId]]) {
+//                    [[RCIM sharedRCIM] refreshUserInfoCache:[[RCDataManager shareManager] currentUserInfoWithUserId:model.targetId] withUserId:model.targetId];
+//
+//                }
+//            }
+//        }
+        
+        for (RCUserInfo *userInfo in [AppDelegate shareAppDelegate].friendsArray) {
+            if ([model.targetId isEqualToString:userInfo.userId]) {
+                NSDictionary *attributeDic = [NSDictionary dictionaryWithObjectsAndKeys:[UIFont systemFontOfSize:18], NSFontAttributeName, nil];
+                CGSize nameLabelSize = [userInfo.realName boundingRectWithSize:CGSizeMake(MAXFLOAT, conversationCell.realNameLabel.frame.size.height) options:NSStringDrawingUsesLineFragmentOrigin attributes:attributeDic context:nil].size;
+                conversationCell.realNameLabel.frame = CGRectMake(conversationCell.realNameLabel.frame.origin.x, conversationCell.realNameLabel.frame.origin.y, nameLabelSize.width, conversationCell.realNameLabel.frame.size.height);
+                conversationCell.typeNameLabel.frame = CGRectMake(conversationCell.realNameLabel.frame.origin.x+conversationCell.realNameLabel.frame.size.width+10, conversationCell.realNameLabel.frame.origin.y, conversationCell.typeNameLabel.frame.size.width, conversationCell.realNameLabel.frame.size.height);
+                if (indexPath.row==self.conversationListDataSource.count-1) {
+                    conversationCell.seprateLine.hidden = YES;
+                }else{
+                    conversationCell.seprateLine.hidden = NO;
+                }
+            }
+        }
+        
+        
+    }
+}
+//*********************插入自定义Cell*********************//
+
+-(RCConversationBaseCell *)rcConversationListTableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
+    if (self.conversationListDataSource.count&&indexPath.row < self.conversationListDataSource.count) {
+        RCConversationModel *model = self.conversationListDataSource[indexPath.row];
+        [[RCDataManager shareManager] getUserInfoWithUserId:model.targetId completion:^(RCUserInfo *userInfo) {
+            NSLog(@"rcConversationListTableView 名字 ＝ %@  ID ＝ %@",userInfo.name,userInfo.userId);
+        }];
+        NSInteger unreadCount = model.unreadMessageCount;
+        RCCustomCell *cell = (RCCustomCell *)[[RCCustomCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"RCCustomCell"];
+       
+        
+        NSDate *date = [NSDate dateWithTimeIntervalSince1970:model.receivedTime/1000];
+        NSString *timeString = [[MSUtil stringFromDate:date] substringToIndex:10];
+        NSString *temp = [MSUtil getyyyymmdd];
+        NSString *nowDateString = [NSString stringWithFormat:@"%@-%@-%@",[temp substringToIndex:4],[temp substringWithRange:NSMakeRange(4, 2)],[temp substringWithRange:NSMakeRange(6, 2)]];
+        
+        if ([timeString isEqualToString:nowDateString]) {
+            NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+            [formatter setDateFormat:@"HH:mm"];
+            NSString *showtimeNew = [formatter stringFromDate:date];
+            cell.timeLabel.text = [NSString stringWithFormat:@"%@",showtimeNew];
+
+        }else{
+            cell.timeLabel.text = [NSString stringWithFormat:@"%@",timeString];
+        }
+        cell.ppBadgeView.dragdropCompletion = ^{
+                    NSLog(@"VC = FFF ，ID ＝ %@",model.targetId);
+            
+            
+            
+           
+            
+            [[RCIMClient sharedRCIMClient] clearMessagesUnreadStatus:ConversationType_PRIVATE targetId:model.targetId];
+            model.unreadMessageCount = 0;
+            NSInteger ToatalunreadMsgCount = (NSInteger)[[RCIMClient sharedRCIMClient] getUnreadCount:@[@(ConversationType_PRIVATE)]];
+            
+            long tabBarCount = ToatalunreadMsgCount-model.unreadMessageCount;
+            int notReadMessage = [[UserInfoModel currentUserinfo].notReadMessage intValue];
+            
+            if (tabBarCount > 0) {
+                [AppDelegate shareAppDelegate].rootTabbar.selectedViewController.tabBarItem.badgeValue = [NSString stringWithFormat:@"%ld",tabBarCount];
+                
+                if (notReadMessage > 0) {
+                    [UIApplication sharedApplication].applicationIconBadgeNumber = notReadMessage + tabBarCount;
+                }
+                else {
+                    [UIApplication sharedApplication].applicationIconBadgeNumber = tabBarCount;
+                }
+            }
+            else {
+                [AppDelegate shareAppDelegate].rootTabbar.selectedViewController.tabBarItem.badgeValue = nil;
+                
+                if (notReadMessage > 0) {
+                    [UIApplication sharedApplication].applicationIconBadgeNumber = notReadMessage;
+                }
+                else {
+                    [UIApplication sharedApplication].applicationIconBadgeNumber = 0;
+                }
+            }
+        };
+        if (unreadCount==0) {
+            cell.ppBadgeView.text = @"";
+        
+        }else{
+            if (unreadCount>=100) {
+                cell.ppBadgeView.text = @"99+";
+            }else{
+                cell.ppBadgeView.text = [NSString stringWithFormat:@"%li",(long)unreadCount];
+
+            }
+        }
+
+        
+
+        for (RCUserInfo *userInfo in [AppDelegate shareAppDelegate].friendsArray) {
+            if ([model.targetId isEqualToString:userInfo.userId]) {
+                
+                cell.realNameLabel.text = [userInfo.realName isEqualToString:@""]?[NSString stringWithFormat:@"%@",userInfo.name]:[NSString stringWithFormat:@"%@",userInfo.realName];
+                
+                
+                UsersType type = [MSUtil checkUserType];
+                
+              
+                
+                
+                if (type==UsersTypeYouke) {
+                    
+                }else if (type==UsersTypeCustomer){
+                    cell.typeNameLabel.text = @"合记专家";
+                    
+                    //判断是不是“合记专家”，红色 else 楼盘名  999999
+                    
+                    
+                }else if (type==UsersTypeSales){
+                    cell.typeNameLabel.text = @"客户";
+                    cell.typeNameLabel.textColor = kFontColor_999999;
+                }
+
+                if ([userInfo.portraitUri isEqualToString:@""]||userInfo.portraitUri==nil) {
+                    cell.avatarIV.image = [UIImage imageNamed:@"chatlistDefault"];
+                    [cell.contentView bringSubviewToFront:cell.avatarIV];
+                }else{
+                    [cell.avatarIV sd_setImageWithURL:[NSURL URLWithString:userInfo.portraitUri] placeholderImage:[UIImage imageNamed:@"chatlistDefault"]];
+                }
+                
+                if ([model.lastestMessage isKindOfClass:[RCTextMessage class]]) {
+                    cell.contentLabel.text = [model.lastestMessage valueForKey:@"content"];
+                    
+                }else if ([model.lastestMessage isKindOfClass:[RCImageMessage class]]){
+                    
+                    if ([model.senderUserId isEqualToString:[RCIMClient sharedRCIMClient].currentUserInfo.userId]) {
+                        //我自己发的
+                        RCUserInfo *myselfInfo = [RCIMClient sharedRCIMClient].currentUserInfo;
+                        
+                        if ([[NSString stringWithFormat:@"%@",myselfInfo.realName] isEqualToString:@""]) {
+                            cell.contentLabel.text =[NSString stringWithFormat:@"来自\"%@\"的图片消息，点击查看",myselfInfo.name];
+                        }else{
+                            cell.contentLabel.text =[NSString stringWithFormat:@"来自\"%@\"的图片消息，点击查看",myselfInfo.realName];
+                            
+                        }
+                    }else{
+                        
+                        cell.contentLabel.text =[NSString stringWithFormat:@"来自\"%@\"的图片消息，点击查看",userInfo.realName] ;
+                    }
+                    
+                }else if ([model.lastestMessage isKindOfClass:[RCVoiceMessage class]]){
+                    if ([model.senderUserId isEqualToString:[RCIMClient sharedRCIMClient].currentUserInfo.userId]) {
+                        //我自己发的
+                        RCUserInfo *myselfInfo = [RCIMClient sharedRCIMClient].currentUserInfo;
+                        if ([[NSString stringWithFormat:@"%@",myselfInfo.realName] isEqualToString:@""]) {
+                            cell.contentLabel.text = [NSString stringWithFormat:@"来自\"%@\"的语音消息，点击查看",myselfInfo.name];
+                            
+                        }else{
+                            cell.contentLabel.text = [NSString stringWithFormat:@"来自\"%@\"的语音消息，点击查看",myselfInfo.realName];
+                        }
+                    }else{
+                        cell.contentLabel.text = [NSString stringWithFormat:@"来自\"%@\"的语音消息，点击查看",userInfo.realName];
+                    }
+                }
+                else if ([model.lastestMessage isKindOfClass:[RCLocationMessage class]]){
+                    if ([model.senderUserId isEqualToString:[RCIMClient sharedRCIMClient].currentUserInfo.userId]) {
+                        //我自己发的
+                        RCUserInfo *myselfInfo = [RCIMClient sharedRCIMClient].currentUserInfo;
+                        if ([[NSString stringWithFormat:@"%@",myselfInfo.realName] isEqualToString:@""]) {
+                            cell.contentLabel.text = [NSString stringWithFormat:@"来自\"%@\"的位置消息，点击查看",myselfInfo.name];
+                        }else{
+                            cell.contentLabel.text = [NSString stringWithFormat:@"来自\"%@\"的位置消息，点击查看",myselfInfo.realName];
+                        }
+                    }else{
+                        cell.contentLabel.text = [NSString stringWithFormat:@"来自\"%@\"的位置消息，点击查看",userInfo.realName];
+                    }
+                }
+                
+            }
+        }
+        
+        return cell;
+    }
+    else{
+        
+        return [[RCConversationBaseCell alloc]init];
+    }
+    
+    
+}
+- (void)didSendMessage:(NSInteger)stauts content:(RCMessageContent *)messageCotent{
+    NSLog(@"fffff %@",messageCotent);
+    
+}
+-(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
+    
+  return  self.conversationListDataSource.count;
+}
+
+#pragma mark - 收到消息监听
+-(void)didReceiveMessageNotification:(NSNotification *)notification{
+    __weak typeof(&*self) blockSelf_ = self;
+    //处理好友请求
+    RCMessage *message = notification.object;
+
+    if ([message.content isMemberOfClass:[RCMessageContent class]]) {
+        if (message.conversationType == ConversationType_PRIVATE) {
+            NSLog(@"好友消息要发系统消息！！！");
+            @throw  [[NSException alloc] initWithName:@"error" reason:@"好友消息要发系统消息！！！" userInfo:nil];
+        }
+        RCConversationModel *customModel = [RCConversationModel new];
+        //自定义cell的type
+        customModel.conversationModelType = RC_CONVERSATION_MODEL_TYPE_CUSTOMIZATION;
+        customModel.senderUserId = message.senderUserId;
+        customModel.lastestMessage = message.content;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            //调用父类刷新未读消息数
+            [blockSelf_ refreshConversationTableViewWithConversationModel:customModel];
+            [super didReceiveMessageNotification:notification];
+            [blockSelf_ resetConversationListBackgroundViewIfNeeded];
+            [self notifyUpdateUnreadMessageCount];
+            
+            //当消息为RCContactNotificationMessage时，没有调用super，如果是最后一条消息，可能需要刷新一下整个列表。
+            //原因请查看super didReceiveMessageNotification的注释。
+            
+        });
+        
+    }else if (message.conversationType == ConversationType_PRIVATE){
+        //获取接受到会话
+        RCConversation *receivedConversation = [[RCIMClient sharedRCIMClient] getConversation:message.conversationType targetId:message.targetId];
+        
+        //转换新会话为新会话模型
+        RCConversationModel *customModel = [[RCConversationModel alloc] init:RC_CONVERSATION_MODEL_TYPE_CUSTOMIZATION conversation:receivedConversation extend:nil];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            //调用父类刷新未读消息数
+            [blockSelf_ refreshConversationTableViewWithConversationModel:customModel];
+            //[super didReceiveMessageNotification:notification];
+            [blockSelf_ resetConversationListBackgroundViewIfNeeded];
+            [self notifyUpdateUnreadMessageCount];
+            
+            //当消息为RCContactNotificationMessage时，没有调用super，如果是最后一条消息，可能需要刷新一下整个列表。
+            //原因请查看super didReceiveMessageNotification的注释。
+            NSNumber *left = [notification.userInfo objectForKey:@"left"];
+            if (0 == left.integerValue) {
+                [super refreshConversationTableViewIfNeeded];
+            }
+        });
+    } else {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            //            调用父类刷新未读消息数
+            [super didReceiveMessageNotification:notification];
+            [blockSelf_ resetConversationListBackgroundViewIfNeeded];
+            [self notifyUpdateUnreadMessageCount];
+            
+            //        super会调用notifyUpdateUnreadMessageCount
+        });
+    }
+    [[RCDataManager shareManager] getUserInfoWithUserId:message.senderUserId completion:^(RCUserInfo *userInfo) {
+        NSLog(@"didReceiveMessageNotification 名字 ＝ %@  ID ＝ %@",userInfo.name,userInfo.userId);
+    }];
+    [self refreshConversationTableViewIfNeeded];
+}
+- (void)didReceiveMemoryWarning {
+    NSLog(@"ChatViewController ReceiveMemoryWarning");
+
+    [super didReceiveMemoryWarning];
+}
+@end
+     融云封装了这个聊天列表的table，但是也提供（或者说暴露）了接口API给我们使用，当然细心的读者可以发现，我用了自定义的cell，#import "RCCustomCell.h"
+这个RCCustomCell是自定义的cell，继承RCConversationBaseCell，RCConversationBaseCell是会话cell的基类 ，看源代码
+/**
+ *  会话Cell基类
+ */
+@interface RCConversationBaseCell : UITableViewCell
+
+/**
+ *  会话数据模型
+ */
+@property(nonatomic, strong) RCConversationModel *model;
+
+/**
+ *  设置会话数据模型
+ *
+ *  @param model 会话数据模型
+ */
+- (void)setDataModel:(RCConversationModel *)model;
+@end
+我们可以用融云暴露出来的API，完成一些自己想要加的功能和逻辑，下面罗列一下一些基本的api和属性
+这个是dataSource数组，里面装的全是我们聊天的model
+@property(nonatomic, strong) NSMutableArray *conversationListDataSource;
+这个就是我们的table了，想改变frame和颜色等，都可以对他下手
+@property(nonatomic, strong) UITableView *conversationListTableView;
+网络不好的时候，这个带一个红色提示的东东老是出现，我直接给他设置frame为CGRectZero，如果你觉得好，可以忽略这个view
+@property(nonatomic, strong) RCNetworkIndicatorView *networkIndicatorView;
+这个属性是告诉table，让他显示什么聊天的类型，当然我的是单聊 就这样设置喽 [self setDisplayConversationTypes:@[@(ConversationType_PRIVATE)]];
+
+@property(nonatomic, strong) NSArray *displayConversationTypeArray;
+下面这个是会话为空的试图，那么如果你想自定义，就要处理这个逻辑了，还有方法配套使用的，方法名字就是- (void)showEmptyConversationView;
+
+/**
+ *  会话列表为空时的视图
+ */
+@property(nonatomic, strong) UIView *emptyConversationView;
+
+
+类似就是点击cell的事件
+/**
+ *  表格选中事件
+ *
+ *  @param conversationModelType 数据模型类型
+ *  @param model                 数据模型
+ *  @param indexPath             索引
+ */
+- (void)onSelectedTableRow:(RCConversationModelType)conversationModelType
+         conversationModel:(RCConversationModel *)model
+               atIndexPath:(NSIndexPath *)indexPath;
+
+自定义cell的话，肯定是要实现返回自定义cell的方法
+#pragma mark override
+/**
+ *  重写方法，可以实现开发者自己添加数据model后，返回对应的显示的cell
+ *
+ *  @param tableView 表格
+ *  @param indexPath 索引
+ *
+ *  @return RCConversationBaseTableCell
+ */
+- (RCConversationBaseCell *)rcConversationListTableView:(UITableView *)tableView
+                                  cellForRowAtIndexPath:(NSIndexPath *)indexPath;
+改变cell的高度，简单，不解释
+/**
+ *  重写方法，可以实现开发者自己添加数据model后，返回对应的显示的cell的高度
+ *
+ *  @param tableView 表格
+ *  @param indexPath 索引
+ *
+ *  @return 高度
+ */
+- (CGFloat)rcConversationListTableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath;
+- 
+
+点击删除的事件，可以处理一些高级逻辑，删除行，还要同时删除model，等等
+#pragma mark override
+/**
+ *  重写方法，点击tableView删除按钮触发事件
+ *
+ *  @param tableView    表格
+ *  @param editingStyle 编辑样式
+ *  @param indexPath    索引
+ */
+- (void)rcConversationListTableView:(UITableView *)tableView
+                 commitEditingStyle:(UITableViewCellEditingStyle)editingStyle
+                  forRowAtIndexPath:(NSIndexPath *)indexPath;
+
+如果你要用融云系统的cell，那么这里的API可以不写，紧紧设置一定属性就可以了，比如头像是圆的还是方的        [self setConversationAvatarStyle:RC_USER_AVATAR_CYCLE];
+比如，显示单聊的还是群聊的cell，        [self setDisplayConversationTypes:@[@(ConversationType_PRIVATE)]];
+等等，其他的可以不写。当有需要的时候才去看这些API，并override，重写，重写之后处理你自己的逻辑。
+
+
+ 好了，上面已经把聊天列表和聊天界面都讲完了。更新头像都逻辑和方案以及你们最喜欢的代码都贴上了。
+ 聊天的东西到此为止。下面会带来自定义cell的方法和代码参考。持续关注，持续更新，谢谢！

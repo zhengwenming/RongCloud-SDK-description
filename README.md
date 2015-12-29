@@ -208,8 +208,8 @@ QuartzCore.framework
 SystemConfiguration.framework
 
 UIKit.framework
-
-三、导入头文件
+三、到工程的设置选择中，系统setting，搜索到Other linker Flags 双击这一行，填写-ObjC,主意O和C是大写的，大小写敏感。（不加这个flag好像发消息会崩溃）
+四、导入头文件
 #import <RongIMKit/RongIMKit.h>
 import <RongIMKit/RongIMKit.h>
 
@@ -218,7 +218,7 @@ import <RongIMKit/RongIMKit.h>
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions ，最好写一个方法专门放置融云的逻辑，initRongCloud方法放置融云的初始化
 
 - (void)initRongCloud{
-
+    这个好友数组friendArray，我放到appdelegate的.h中声名，程序任何地方可以通过appdelegate这个单例拿到，想哪里用就可以在哪里用。这个数组是存放我的全部好友信息的，里面放的是RCUserInfo，每个好友都是RCUserInfo的一个实例对象。
     self.friendsArray = [[NSMutableArray alloc]init];
 
     //测试环境          AppKey XXXXXAppKey        AppSecret XXXXXXAppSecret
@@ -226,7 +226,7 @@ import <RongIMKit/RongIMKit.h>
     //正式上线环境       AppKey XXXXXAppKey       AppSecret  XXXXXAppKey
 
     NSString *rongYunKey = @"yourAPPKey";
-
+判断用正式appkey还是测试appkey，测试开发环境最好不要用正式的key哦，不要怪我没提醒。
     if ([kNetwork_Host isEqualToString:@"http://weixintest.ihk.cn"]) {//正式环境用正式key，开发测试环境用测试的key
 
         rongYunKey = @"your 正式appkey";
@@ -237,7 +237,7 @@ import <RongIMKit/RongIMKit.h>
     }
 //初始化appkey
     [[RCIM sharedRCIM] initWithAppKey:rongYunKey];
-//初始化全局的单例RCDataManager（融云数据管理者）
+//初始化全局的单例RCDataManager（融云数据管理者），这个RCDataManager把所以融云有关数据的逻辑和代码分离了，方便该，也方便维护。这里把userInfoDatasource设置为RCDataManager。
     [RCIM sharedRCIM].userInfoDataSource = [RCDataManager shareManager];
 
 /**enableMessageAttachUserInfo
@@ -255,7 +255,7 @@ import <RongIMKit/RongIMKit.h>
 
 }
 
-初始化完成后就是拿token，然后用一个人的userId去connect了，那么这个逻辑我没有把代码写在appdelegate，因为业务相同的逻辑应该分离出来，要不全部代码写appdelegate里面太乱，太难维护，我们把有关融云的逻辑抽离出来，放一个类RCDataManager中去管理，那么我的这个RCDataManager完成了什么功能，什么逻辑，具体怎么设计这个类，为什么要这样设计。下面详细介绍下怎么把融云的逻辑模块分离出来，写出高一点质量的代码。
+初始化完成后就是拿token，然后用一个人（当前用户啊）的userId去connect了，那么这个逻辑我没有把代码写在appdelegate，因为业务相同的逻辑应该分离出来，要不全部代码写appdelegate里面太乱，太难维护，我们把有关融云的逻辑抽离出来，放一个类RCDataManager中去管理，那么我的这个RCDataManager完成了什么功能，什么逻辑，具体怎么设计这个类，为什么要这样设计。下面详细介绍下怎么把融云的逻辑模块分离出来，写出高一点质量的代码。
 RCDataManager是个单例类，主要功能就是登录融云，刷新好友列表，设置好友信息提供者代理等等，设置tabbar的角标等等。他的好处是把融云的逻辑分离出来，业务逻辑分离，方便维护工程，我们用的时候就一句代码就可以了，比如登录就这样 [[RCDataManager shareManager] loginRongCloud];具体RCDataManager类的代码如下：
 
 @interface RCDataManager : NSObject<RCIMUserInfoDataSource>
@@ -281,7 +281,7 @@ RCIMUserInfoDataSource是融云的好友提供者代理，很重要，非常重�
 -(BOOL)hasTheFriendWithUserId:(NSString *)userId;
 
 -(void)loginRongCloud;
-
+//同步好友列表的方法，用此方法可以刷新到最新的好友列表，比如有新朋友了，那么就要同步一下
 -(void) syncFriendList:(void (^)(NSMutableArray * friends,BOOL isSuccess))completion;
 
 -(void)refreshBadgeValue;
@@ -345,7 +345,7 @@ RCIMUserInfoDataSource是融云的好友提供者代理，很重要，非常重�
 -(void)syncFriendList:(void (^)(NSMutableArray* friends,BOOL isSuccess))completion
 
 {
-
+//这里是用户的身份，可能其他开发者不需要这个逻辑，不需要的话，就直接调用好友列表的接口，拿到好友列表的数组，做成RCUserInfo，然后add进去数组。就这简单！
     UsersType type = [MSUtil checkUserType];
 
     if (type==UsersTypeYouke) {//游客
@@ -1084,7 +1084,7 @@ char* const REALNAME   = "REALNAME";
                                 [self.navigationController pushViewController:_conversationVC animated:YES];
  这里的ConversationViewController是我自己的VC继承RCConversationViewController，RCConversationViewController是用的融云写的UI，就是说这个RCConversationViewController里面的UI全部写好了，就很类似QQ聊天的界面，键盘啊，表情啊，发送图片啊，发送语音啊，一切的一切都搞定了。我们只需要配置一些属性，然后push就可以了。如果我们有自己的需求UI，我们也可以适当的在ConversationViewController基础上修改。（关于RCConversationViewController里面很多方法和属性，后续会慢慢涉及到，现在功能上没有涉及，所以先介绍到这里，后续讲解更高级的功能，就可以把更多的API给带出来，这样才有使用的场景，才更容易理解。）
  
-     那么每个app几乎都会有类似聊天列表的界面。描述一下，就是聊天之后会生成cell把，和10个人聊过天就有10个cell，就是QQ里面的聊天列表了。对应在融云这边就是RCConversationListViewController，注意，这个RCConversationListViewController我们也不能直接用啊，我们也要写一个自己的VC，那就是ChatViewController继承融云的RCConversationListViewController，这个ChatViewController就是我们自己写的聊天列表了，我们一旦有和某人聊天，那么自动会生成一个cell到这个vc里面，里面的机制大家不要去试图理解了，融云已经封装好了，一旦你和老王，前提老王是你的好友，并且你登录了融云服务器，那么你聊天后就可以回来这个vc看了，肯定出了一个cell，显示的是老王的名字和头像。那么下面我就把这个聊天列表VC的功能和API详细的介绍下，继续大尺度（没用人其他人愿意这么大尺度了，绝对的福利）的贴代码：
+     那么每个app几乎都会有类似聊天列表的界面。描述一下，就是聊天之后会生成cell的，比如你点击了10个人的主页里面的聊天按钮，然后和这10个让聊过天，那么聊天列表就有10个cell自动生成（融云内部封装好的，理解为融云的机制，不要过分强求的分析是怎么回事。）。对应在融云这边的类就是RCConversationListViewController，注意，这个RCConversationListViewController我们也不能直接用啊，我们也要写一个自己的VC，那就是ChatViewController继承融云的RCConversationListViewController，这个ChatViewController就是我们自己写的聊天列表了，我们一旦有和某人聊天，那么自动会生成一个cell到这个vc里面，里面的机制大家不要去试图理解了，融云已经封装好了，一旦你和老王，前提你登录了融云服务器，并且老王是你的好友，那么你聊天后就可以回来这个vc看了，肯定出了一个cell，显示的是老王的名字和头像。那么下面我就把这个聊天列表VC的功能和API详细的介绍下，继续大尺度（没有人其他人愿意这么大尺度了，绝对的福利）的贴代码：
      .h里面代码
      #import "BaseViewController.h"
 
@@ -1287,7 +1287,7 @@ char* const REALNAME   = "REALNAME";
                 这里更新好友的最新列表
                     [[RCDataManager shareManager] syncFriendList:^(NSMutableArray *friends, BOOL isSuccess) {
                         if (isSuccess) {
-                        这里更新融云缓存
+                        这里更新融云缓存，不更新缓存是不行的，我已经实验过了
                             [[RCIM sharedRCIM] refreshUserInfoCache:theLastedInfo withUserId:userInfoDic[@"sendUsersId"]];
                             
                         }else{
@@ -1302,7 +1302,7 @@ char* const REALNAME   = "REALNAME";
             
         }
     }
-    
+    JSON字典就是下面的这个样子，iOSer看了就懂了
     //    {"sendUsersId":"85","sendUsersName":"快乐","sendUsersPhoto":"http://weixintest.ihk.cn/ihkwx_upload/userPhoto/13632415461-1449631301776.jpg"}
 
     NSString *notTroubleStr = [TheUserDefaults objectForKey:@"setSpareTimeYES"];

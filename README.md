@@ -2151,3 +2151,362 @@ char* const REALNAME   = "REALNAME";
 
  好了，上面已经把聊天列表和聊天界面都讲完了。更新头像都逻辑和方案以及你们最喜欢的代码都贴上了。
  聊天的东西到此为止。下面会带来自定义cell的方法和代码参考。持续关注，持续更新，谢谢！
+
+
+
+－－－－－－－－－－－－－－－－－－－－－－华丽丽的分割线－－－－－－－－－－－－－－－－－－－－－－－－
+－－－－－－－－－－－－－－－－－－－－－－华丽丽的分割线－－－－－－－－－－－－－－－－－－－－－－－－
+－－－－－－－－－－－－－－－－－－－－－－华丽丽的分割线－－－－－－－－－－－－－－－－－－－－－－－－
+－－－－－－－－－－－－－－－－－－－－－－华丽丽的分割线－－－－－－－－－－－－－－－－－－－－－－－－
+－－－－－－－－－－－－－－－－－－－－－－华丽丽的分割线－－－－－－－－－－－－－－－－－－－－－－－－
+－－－－－－－－－－－－－－－－－－－－－－华丽丽的分割线－－－－－－－－－－－－－－－－－－－－－－－－
+
+
+
+
+
+
+ 说说融云即时通讯SDK开发篇之自定义cell(四)
+ 
+   此章节专门讲述如何自定义聊天列表中的cell，各种各样的cell，都可以自定义，高的，矮的，cell里面加了是男是女的标志，加了说话人的电话，加了说话人的公司，等等等等都可以解决。还有如何操作这个cell，这里的操作意思比较广泛了，比如给cell中的控件赋值，右滑动删除cell删除了还要处理逻辑，给cell加上类似QQ好友列表中的Badge，角标。
+   废话少说，对于程序员来说，代码才最解渴，继续大尺度贴代码（我如果紧紧讲解理论让你们去自己写，那么和官方文档没区别了，也没了价值）。
+    说一下大前提，用代码表示就是
+    if（你的融云的SDK已经集成功能了，可以聊天产生cell了）｛
+     continue，继续阅读自定义cell
+     ｝else｛
+      return；
+    ｝
+    
+    
+   首先我们要新建一个cell类，名字叫做RCCustomCell，然后继承融云的RCConversationBaseCell，这个是融云的会话cell的基类。
+   我们来看看基类的源代码，如下；
+   /**
+ *  会话Cell基类
+ */
+@interface RCConversationBaseCell : UITableViewCell
+
+/**
+ *  会话数据模型
+ */
+@property(nonatomic, strong) RCConversationModel *model;
+
+/**
+ *  设置会话数据模型
+ *
+ *  @param model 会话数据模型
+ */
+- (void)setDataModel:(RCConversationModel *)model;
+@end
+ 可以看到，每个cell里面对应一个model，这个model就是会话的model，这个model保存了很多的有关会话的信息，这些信息对我们自定义cell提示作用。这个model都保存了什么信息，继续揭开他的面纱，哎呀，其实就是点进去看源码，我们看到，model保存了会话的类型RCConversationType，还有用户自定义的数据id extend，还有会话的id，就是targetId，目标id就是对方的userId，还有会话中未读消息数unreadMessageCount，这个unreadMessageCount很有用，我们下面会用到，是每个cell中对应的model的未读消息数，不是总的未读消息数哦。还有senderUserId发送消息用户id，senderUserName，发送消息的用户名字，另外还有接收时间long long receivedTime和发送的时间long long sentTime等等。
+    这个是不是和我们从网络获取的json数据一样，然后用我们自己建的model保存起来，然后放数据源数组里面进行对table里面的每个cell的控件赋值，很像，其实就是啦，只不过model和数据源数组我们不用管理了，融云已经封装好了。岂不是更方便。
+
+   那么有人说我的cell上面还想放置其他的东西，比如每个医生的地址和电话，还有的开发者需要放置每个用户的鲜花个数，粉丝数量等等，那么都是可以的，怎么实现呢，这些都没在model里面。我们这样想，你能拿到model，就可以拿到对方的userId，这个没问题，那么对方的id你都知道了，你还拿不到他的所有信息吗？肯定拿得到得呀，他不是在一个好友得数组里面吗？去数组里面找啊，那么我们得RCDataManger有两个方法，再拿过来看看
+   -(BOOL)hasTheFriendWithUserId:(NSString *)userId;
+   -(RCUserInfo *)currentUserInfoWithUserId:(NSString *)userId;
+我们可以通过userId判断有没有这个好友，并且可以拿到这个人得RCUserInfo，就是他得所有信息了。这个RCUserInfo在初始化得时候要提供一个特殊得初始化方法，把每个好友得所有信息字段都传进去，这个方法前面有讲到。不会得同学要复习一下前面得东西了。
+
+
+好了，说这么多了，终于把cell的理论讲解完了，终于可以任性的贴代码了
+先看。h文件里面。
+#import <RongIMKit/RongIMKit.h>
+#import "PPDragDropBadgeView.h"
+cell的高度，这里是80各高度
+#define kCellHeight 80
+
+@interface RCCustomCell : RCConversationBaseCell
+///头像
+@property (nonatomic,retain) UIImageView *avatarIV;
+///真实姓名
+@property (nonatomic,retain) UILabel *realNameLabel;
+///头衔
+@property (nonatomic,retain) UILabel *typeNameLabel;
+///时间
+@property (nonatomic,retain) UILabel *timeLabel;
+///内容
+@property (nonatomic,retain) UILabel *contentLabel;
+///分割线
+@property (nonatomic,retain) UILabel *seprateLine;
+///角标（UIView）这里我用了一个第三方，很好用，提供Github地址https://github.com/smallmuou/PPDragDropBadgeView
+@property (nonatomic,retain) PPDragDropBadgeView *ppBadgeView;
+
+@end
+再看。m文件里面的代码
+#import "RCCustomCell.h"
+
+#define kbadageWidth 20
+#define kgap 10
+
+/*
+ 
+ avatarIV
+ 
+ realNameLabel
+ typeNameLabel
+ timeLabel
+ contentLabel
+ 
+ */
+@implementation RCCustomCell
+
+-(instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
+{
+    self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
+    if (self) {
+        
+        
+
+        
+        //头像
+        self.avatarIV = [[UIImageView alloc]initWithFrame:CGRectMake(kgap, kgap, kCellHeight-2*kgap, kCellHeight-2*kgap)];
+        self.avatarIV.clipsToBounds = YES;
+        self.avatarIV.layer.cornerRadius = 8;
+//        self.avatarIV.image = [UIImage imageNamed:@"default_portrait_msg"];
+        [self.contentView addSubview:self.avatarIV];
+        //realName
+        self.realNameLabel = [[UILabel alloc]initWithFrame:CGRectMake(self.avatarIV.frame.origin.x+self.avatarIV.frame.size.width+kgap, self.avatarIV.frame.origin.y+7, self.avatarIV.frame.size.width+40, self.avatarIV.frame.size.height/2-kgap/2)];
+        self.realNameLabel.font = [UIFont systemFontOfSize:18];
+        self.realNameLabel.textColor = kFontColor_333333;
+//        self.realNameLabel.backgroundColor = [UIColor cyanColor];
+        [self.contentView addSubview:self.realNameLabel];
+        //头衔
+        self.typeNameLabel = [[UILabel alloc]initWithFrame:CGRectMake(self.realNameLabel.frame.origin.x+self.realNameLabel.frame.size.width+kgap, self.realNameLabel.frame.origin.y, self.realNameLabel.frame.size.width*2, self.realNameLabel.frame.size.height)];
+        self.typeNameLabel.font = [UIFont systemFontOfSize:15];
+        self.typeNameLabel.textColor = kColor_TintRed;
+//        self.typeNameLabel.backgroundColor = [UIColor magentaColor];
+        [self.contentView addSubview:self.typeNameLabel];
+        //时间
+        self.timeLabel = [[UILabel alloc]initWithFrame:CGRectMake(kScreenWidth-90-5, self.typeNameLabel.frame.origin.y, 90, self.typeNameLabel.frame.size.height)];
+        self.timeLabel.textAlignment = NSTextAlignmentRight;
+        self.timeLabel.font = [UIFont systemFontOfSize:15];
+        self.timeLabel.textColor = kFontColor_999999;
+        [self.contentView addSubview:self.timeLabel];
+        //内容
+        self.contentLabel = [[UILabel alloc]initWithFrame:CGRectMake(self.realNameLabel.frame.origin.x, self.realNameLabel.frame.origin.y+self.realNameLabel.frame.size.height+2, kScreenWidth-self.avatarIV.frame.size.width-2*kgap-5-30, self.typeNameLabel.frame.size.height)];
+//        self.contentLabel.backgroundColor = [UIColor purpleColor];
+        self.contentLabel.textColor = kFontColor_999999;
+        self.contentLabel.font = [UIFont systemFontOfSize:15];
+        [self.contentView addSubview:self.contentLabel];
+        //角标，这个用来显示每个好友的角标，实现类似QQ聊天列表中强大的拖曳角标的功能
+        self.ppBadgeView = [[PPDragDropBadgeView alloc]initWithFrame:CGRectMake(self.contentLabel.frame.origin.x+self.contentLabel.frame.size.width, self.contentLabel.frame.origin.y, 25, 25)];
+        self.ppBadgeView.fontSize = 12;
+        [self.contentView addSubview:self.ppBadgeView];
+        ///分割线
+        self.seprateLine =[[UILabel alloc]initWithFrame:CGRectMake(self.realNameLabel.frame.origin.x, kCellHeight-2, kScreenWidth-self.avatarIV.frame.size.width-2*kgap, 0.5)];
+        //        self.contentLabel.backgroundColor = [UIColor purpleColor];
+        self.seprateLine.backgroundColor = [UIColor lightGrayColor];
+        [self.contentView addSubview:self.seprateLine];
+    }
+    return self;
+}
+-(void)layoutSubviews{
+    [super layoutSubviews];
+    
+}
+@end
+到这里，我们就把cell自定义代码写完了，那么下面就是使用这个cell了。怎么用，怎么替换系统的cell。继续往下看，到聊天列表vc中改代码。
+-(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
+  return  self.conversationListDataSource.count;
+}
+//高度
+-(CGFloat)rcConversationListTableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
+    return kCellHeight;
+}
+#pragma mark
+#pragma mark 是否禁止右滑删除
+-(BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath{
+    return YES;
+}
+//左滑删除
+-(void)rcConversationListTableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath{
+    //可以从数据库删除数据
+    if (indexPath.row < self.conversationListDataSource.count) {
+    RCConversationModel *model = self.conversationListDataSource[indexPath.row];
+    [[RCIMClient sharedRCIMClient] removeConversation:ConversationType_PRIVATE targetId:model.targetId];
+    [self.conversationListDataSource removeObjectAtIndex:indexPath.row];
+    [self.conversationListTableView reloadData];
+    [[RCDataManager shareManager] refreshBadgeValue];
+    }
+}
+
+ //*********************修改自定义Cell中model的会话model类型*********************//
+
+//插入自定义会话model,这个很重要，一定要实现
+-(NSMutableArray *)willReloadTableData:(NSMutableArray *)dataSource{
+    for (int i=0; i<dataSource.count; i++) {
+        RCConversationModel *model = dataSource[i];
+        if(model.conversationType == ConversationType_PRIVATE){//如果是单例，那么我们改model的一个属性，就是把会话model的类型改为自定义
+            model.conversationModelType = RC_CONVERSATION_MODEL_TYPE_CUSTOMIZATION;
+        }
+    }
+    return dataSource;
+}
+ 开始使用自定义cell
+ //*********************插入自定义Cell*********************//
+这个返回cell的方法，以前也贴出来过，不过注视比较少，这次专门来讲解这个返回cell的方法，这里就返回了我们自定义的cell
+-(RCConversationBaseCell *)rcConversationListTableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
+    if (self.conversationListDataSource.count&&indexPath.row < self.conversationListDataSource.count) {
+    //首先我们要从数据源数组中取出融云的model类，方便下面使用model的属性，大把资料要从model的属性中获取，或者间接获取到
+        RCConversationModel *model = self.conversationListDataSource[indexPath.row];
+        [[RCDataManager shareManager] getUserInfoWithUserId:model.targetId completion:^(RCUserInfo *userInfo) {
+            NSLog(@"rcConversationListTableView 名字 ＝ %@  ID ＝ %@",userInfo.name,userInfo.userId);
+        }];
+        NSInteger unreadCount = model.unreadMessageCount;//每个cell的未读消息数量
+        RCCustomCell *cell = (RCCustomCell *)[[RCCustomCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"RCCustomCell"];
+       我们alloc 一个自己的cell，下面给他赋值，处理逻辑
+        
+        NSDate *date = [NSDate dateWithTimeIntervalSince1970:model.receivedTime/1000];
+        NSString *timeString = [[MSUtil stringFromDate:date] substringToIndex:10];
+        NSString *temp = [MSUtil getyyyymmdd];
+        NSString *nowDateString = [NSString stringWithFormat:@"%@-%@-%@",[temp substringToIndex:4],[temp substringWithRange:NSMakeRange(4, 2)],[temp substringWithRange:NSMakeRange(6, 2)]];
+        
+        if ([timeString isEqualToString:nowDateString]) {
+            NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+            [formatter setDateFormat:@"HH:mm"];
+            NSString *showtimeNew = [formatter stringFromDate:date];
+            //这里赋值时间，时间显示，融云mode里面的是long long类型的，用的时候一定要转化，方法和代码都有了，不多赘述
+            cell.timeLabel.text = [NSString stringWithFormat:@"%@",showtimeNew];
+
+        }else{
+            cell.timeLabel.text = [NSString stringWithFormat:@"%@",timeString];
+        }
+        //处理角标的拖曳，这里拖曳完成之后回调一个block，在block里面我们要处理逻辑了，你把角标拖曳掉之后，要调用RCIMClient这个单例，设置某人的未读消息为0.因为你已经拖曳掉了这个角标啊。到此还不行，因为数据源里面model的属性没变，model的属性没变，滑动table，角标又一次出现了，治标不治本，那么我们直接设置model.unreadMessageCount = 0;那么我们这样就做到了，融云服务器上的某人的未读消息数量和本地cell上面的一致了；
+        cell.ppBadgeView.dragdropCompletion = ^{
+                    NSLog(@"VC = FFF ，ID ＝ %@",model.targetId);
+            
+            
+            
+           
+            
+            [[RCIMClient sharedRCIMClient] clearMessagesUnreadStatus:ConversationType_PRIVATE targetId:model.targetId];
+            model.unreadMessageCount = 0;
+            NSInteger ToatalunreadMsgCount = (NSInteger)[[RCIMClient sharedRCIMClient] getUnreadCount:@[@(ConversationType_PRIVATE)]];
+            
+            long tabBarCount = ToatalunreadMsgCount-model.unreadMessageCount;
+            int notReadMessage = [[UserInfoModel currentUserinfo].notReadMessage intValue];
+            
+            if (tabBarCount > 0) {
+                [AppDelegate shareAppDelegate].rootTabbar.selectedViewController.tabBarItem.badgeValue = [NSString stringWithFormat:@"%ld",tabBarCount];
+                
+                if (notReadMessage > 0) {
+                    [UIApplication sharedApplication].applicationIconBadgeNumber = notReadMessage + tabBarCount;
+                }
+                else {
+                    [UIApplication sharedApplication].applicationIconBadgeNumber = tabBarCount;
+                }
+            }
+            else {
+                [AppDelegate shareAppDelegate].rootTabbar.selectedViewController.tabBarItem.badgeValue = nil;
+                
+                if (notReadMessage > 0) {
+                    [UIApplication sharedApplication].applicationIconBadgeNumber = notReadMessage;
+                }
+                else {
+                    [UIApplication sharedApplication].applicationIconBadgeNumber = 0;
+                }
+            }
+        };
+        if (unreadCount==0) {
+            cell.ppBadgeView.text = @"";
+        
+        }else{
+            if (unreadCount>=100) {
+                cell.ppBadgeView.text = @"99+";
+            }else{
+                cell.ppBadgeView.text = [NSString stringWithFormat:@"%li",(long)unreadCount];
+
+            }
+        }
+
+        
+
+        for (RCUserInfo *userInfo in [AppDelegate shareAppDelegate].friendsArray) {
+            if ([model.targetId isEqualToString:userInfo.userId]) {
+                //赋值名字属性
+                cell.realNameLabel.text = [userInfo.realName isEqualToString:@""]?[NSString stringWithFormat:@"%@",userInfo.name]:[NSString stringWithFormat:@"%@",userInfo.realName];
+                
+                
+                UsersType type = [MSUtil checkUserType];
+                
+              
+                
+                
+                if (type==UsersTypeYouke) {
+                    
+                }else if (type==UsersTypeCustomer){
+                    cell.typeNameLabel.text = @"头衔";
+                    
+                }else if (type==UsersTypeSales){
+                    cell.typeNameLabel.text = @"客户";
+                    cell.typeNameLabel.textColor = kFontColor_999999;
+                }
+    //赋值头像
+                if ([userInfo.portraitUri isEqualToString:@""]||userInfo.portraitUri==nil) {
+                    cell.avatarIV.image = [UIImage imageNamed:@"chatlistDefault"];
+                    [cell.contentView bringSubviewToFront:cell.avatarIV];
+                }else{
+                    [cell.avatarIV sd_setImageWithURL:[NSURL URLWithString:userInfo.portraitUri] placeholderImage:[UIImage imageNamed:@"chatlistDefault"]];
+                }
+                
+                if ([model.lastestMessage isKindOfClass:[RCTextMessage class]]) {
+                    cell.contentLabel.text = [model.lastestMessage valueForKey:@"content"];
+                    
+                }else if ([model.lastestMessage isKindOfClass:[RCImageMessage class]]){
+                    
+                    if ([model.senderUserId isEqualToString:[RCIMClient sharedRCIMClient].currentUserInfo.userId]) {
+                        //我自己发的
+                        RCUserInfo *myselfInfo = [RCIMClient sharedRCIMClient].currentUserInfo;
+                        
+                        if ([[NSString stringWithFormat:@"%@",myselfInfo.realName] isEqualToString:@""]) {
+                            cell.contentLabel.text =[NSString stringWithFormat:@"来自\"%@\"的图片消息，点击查看",myselfInfo.name];
+                        }else{
+                            cell.contentLabel.text =[NSString stringWithFormat:@"来自\"%@\"的图片消息，点击查看",myselfInfo.realName];
+                            
+                        }
+                    }else{
+                        
+                        cell.contentLabel.text =[NSString stringWithFormat:@"来自\"%@\"的图片消息，点击查看",userInfo.realName] ;
+                    }
+                    
+                }else if ([model.lastestMessage isKindOfClass:[RCVoiceMessage class]]){
+                    if ([model.senderUserId isEqualToString:[RCIMClient sharedRCIMClient].currentUserInfo.userId]) {
+                        //我自己发的
+                        RCUserInfo *myselfInfo = [RCIMClient sharedRCIMClient].currentUserInfo;
+                        if ([[NSString stringWithFormat:@"%@",myselfInfo.realName] isEqualToString:@""]) {
+                            cell.contentLabel.text = [NSString stringWithFormat:@"来自\"%@\"的语音消息，点击查看",myselfInfo.name];
+                            
+                        }else{
+                            cell.contentLabel.text = [NSString stringWithFormat:@"来自\"%@\"的语音消息，点击查看",myselfInfo.realName];
+                        }
+                    }else{
+                        cell.contentLabel.text = [NSString stringWithFormat:@"来自\"%@\"的语音消息，点击查看",userInfo.realName];
+                    }
+                }
+                else if ([model.lastestMessage isKindOfClass:[RCLocationMessage class]]){
+                    if ([model.senderUserId isEqualToString:[RCIMClient sharedRCIMClient].currentUserInfo.userId]) {
+                        //我自己发的
+                        RCUserInfo *myselfInfo = [RCIMClient sharedRCIMClient].currentUserInfo;
+                        if ([[NSString stringWithFormat:@"%@",myselfInfo.realName] isEqualToString:@""]) {
+                            cell.contentLabel.text = [NSString stringWithFormat:@"来自\"%@\"的位置消息，点击查看",myselfInfo.name];
+                        }else{
+                            cell.contentLabel.text = [NSString stringWithFormat:@"来自\"%@\"的位置消息，点击查看",myselfInfo.realName];
+                        }
+                    }else{
+                        cell.contentLabel.text = [NSString stringWithFormat:@"来自\"%@\"的位置消息，点击查看",userInfo.realName];
+                    }
+                }
+                
+            }
+        }
+        
+        return cell;
+    }
+    else{
+        
+        return [[RCConversationBaseCell alloc]init];
+    }
+    
+    
+}
+
+
+到此，自定义cell应该没问题了，如果有问题，群里联系我487599875

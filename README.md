@@ -1068,20 +1068,16 @@ char* const REALNAME   = "REALNAME";
  
  
       接着开发篇二的内容，我们已经把融云的逻辑分离出来，并且登录了融云服务器。此篇章讲如何聊天，生成聊天列表，显示头像名字等。
-      各个APP的界面UI设计的不同，每个开发者的需求也不同，但是万变不离其宗，我们抓住不变的地方，也就是共同之处。那么共同之处在哪里？就是我们要触发一个事件，比如点击了一个cell，或者点击了一个Button，又或者我们调用一个接口后台返回给我们一个人的信息，那么各个开发者触发这一系列的事件都是为了和某个人聊天，触发事件的时候，我们一定要拿到对应事件的这个人的信息（userInfo，包含很多字段，各个开发者需求不同，字段肯定就不同，但是userId一定有的，这个是相同之处）。举个栗子，比如进入一个tableView展示的列表，那么我们点击cell，动态的去取到每个cell对应到人的信息，然后就是在点击cell的事件里面配置我们ConversationViewController的属性了，那么代码在下面。
+ 各个APP的界面UI设计的不同，每个开发者的需求也不同，但是万变不离其宗，我们抓住不变的地方，也就是共同之处。那么共同之处在哪里？就是我们要触发一个事件，比如点击了一个cell，或者点击了一个Button，又或者我们调用一个接口后台返回给我们一个人的信息，那么各个开发者触发这一系列的事件都是为了和某个人聊天，触发事件的时候，我们一定要拿到对应事件的这个人的信息（userInfo，包含很多字段，各个开发者需求不同，字段肯定就不同，但是userId一定有的，这个是相同之处）。举个栗子，比如进入一个tableView展示的列表，那么我们点击cell，动态的去取到每个cell对应到人的信息，然后就是在点击cell的事件里面配置我们ConversationViewController的属性了，那么代码在下面。
       
       
-      ConversationViewController *_conversationVC = [[ConversationViewController alloc]init];
+ ConversationViewController *_conversationVC = [[ConversationViewController alloc]init];
                                 _conversationVC.conversationType = ConversationType_PRIVATE;
                                 _conversationVC.targetId = [NSString stringWithFormat:@"%@",model.data[@"id"]];
                                 
                                 _conversationVC.userName = [NSString stringWithFormat:@"%@",model.data[@"agentTeamName"]];
                                 _conversationVC.title = [NSString stringWithFormat:@"%@",model.data[@"realName"]];
-                                
-                                //                            _conversationVC.title = [NSString stringWithFormat:@"%@ %@",model.data[@"realName"],model.data[@"agentTeamName"]];
-                                [hud removeFromSuperview];
-
-                                [self.navigationController pushViewController:_conversationVC animated:YES];
+[self.navigationController pushViewController:_conversationVC animated:YES];
  这里的ConversationViewController是我自己的VC继承RCConversationViewController，RCConversationViewController是用的融云写的UI，就是说这个RCConversationViewController里面的UI全部写好了，就很类似QQ聊天的界面，键盘啊，表情啊，发送图片啊，发送语音啊，一切的一切都搞定了。我们只需要配置一些属性，然后push就可以了。如果我们有自己的需求UI，我们也可以适当的在ConversationViewController基础上修改。（关于RCConversationViewController里面很多方法和属性，后续会慢慢涉及到，现在功能上没有涉及，所以先介绍到这里，后续讲解更高级的功能，就可以把更多的API给带出来，这样才有使用的场景，才更容易理解。）
  
      那么每个app几乎都会有类似聊天列表的界面。描述一下，就是聊天之后会生成cell的，比如你点击了10个人的主页里面的聊天按钮，然后和这10个让聊过天，那么聊天列表就有10个cell自动生成（融云内部封装好的，理解为融云的机制，不要过分强求的分析是怎么回事。）。对应在融云这边的类就是RCConversationListViewController，注意，这个RCConversationListViewController我们也不能直接用啊，我们也要写一个自己的VC，那就是ChatViewController继承融云的RCConversationListViewController，这个ChatViewController就是我们自己写的聊天列表了，我们一旦有和某人聊天，那么自动会生成一个cell到这个vc里面，里面的机制大家不要去试图理解了，融云已经封装好了，一旦你和老王，前提你登录了融云服务器，并且老王是你的好友，那么你聊天后就可以回来这个vc看了，肯定出了一个cell，显示的是老王的名字和头像。那么下面我就把这个聊天列表VC的功能和API详细的介绍下，继续大尺度（没有人其他人愿意这么大尺度了，绝对的福利）的贴代码：

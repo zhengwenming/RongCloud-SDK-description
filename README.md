@@ -1,5 +1,11 @@
 # RongCloud-SDK-description
+---
+微信扫码关注文明的iOS开发公众号
+或者微信搜索“iOS开发by文明”
 
+![image](https://github.com/zhengwenming/WMPlayer/blob/master/PlayerDemo/gzh.jpg)
+
+---
 # 欢迎关注我的斗鱼直播间，用手机斗鱼TV，直接搜索`文明直播间`或者`极端恐惧`就可以找到我的直播。`iOS技术分享`直播。进来点一下关注，谢谢，开播会有推送到大家手机。（个人直播，非机构，适合`初级iOS`和`中级iOS`）。
 
 # 欢迎加入`iOS开发技术支持群`，`479259423`，进群必须改名（2元付费群，慎入！），群名片格式：`城市-iOS-名字`，例如`广州-iOS-文明`。
